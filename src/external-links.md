@@ -1,4 +1,4 @@
-# External links
+# 外部リンク
 
 - [RFC 199] - Ownership naming conventions
 - [RFC 344] - Naming conventions

@@ -1,29 +1,23 @@
-# Flexibility
+# 柔軟性
 
 
 <a id="c-intermediate"></a>
-## Functions expose intermediate results to avoid duplicate work (C-INTERMEDIATE)
+## 重複した処理を行わなくて済むように中間生成物を公開している (C-INTERMEDIATE)
 
-Many functions that answer a question also compute interesting related data. If
-this data is potentially of interest to the client, consider exposing it in the
-API.
+何らかの処理を行って結果を返す関数の多くは、関連したデータを途中で生成しています。
+もしユーザにとって有益なものがあれば、それを公開するAPIの追加を検討してください。
 
-### Examples from the standard library
+### 標準ライブラリでの例
 
-- [`Vec::binary_search`] does not return a `bool` of whether the value was
-  found, nor an `Option<usize>` of the index at which the value was maybe found.
-  Instead it returns information about the index if found, and also the index at
-  which the value would need to be inserted if not found.
+- [`Vec::binary_search`]は目的の値が見つかったか否かを`bool`で表したり、
+  目的の値が見つかった位置を`Option<usize>`で返すようにはなっていません。
+  代わりに、もし見つかればその位置を、そして見つからなければその値が挿入されるべき位置を返します。
 
-- [`String::from_utf8`] may fail if the input bytes are not UTF-8. In the error
-  case it returns an intermediate result that exposes the byte offset up to
-  which the input was valid UTF-8, as well as handing back ownership of the
-  input bytes.
+- [`String::from_utf8`]は入力が正しいUTF-8でなければ失敗します。
+  そのとき、入力のどこまでが正しいUTF-8であったかを返し、また入力されたバイト列の所有権も返します。
 
-- [`HashMap::insert`] returns an `Option<T>` that returns the preexisting value
-  for a given key, if any. For cases where the user wants to recover this value
-  having it returned by the insert operation avoids the user having to do a second
-  hash table lookup.
+- [`HashMap::insert`]はそのキーの場所に元から値が存在していたら、その値を`Option<T>`で返します。
+  ユーザがこの値を必要としているとき、この挙動がなければハッシュテーブルへのルックアップを二度繰り返さなければなりません。
 
 [`Vec::binary_search`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.binary_search
 [`String::from_utf8`]: https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8
@@ -31,57 +25,54 @@ API.
 
 
 <a id="c-caller-control"></a>
-## Caller decides where to copy and place data (C-CALLER-CONTROL)
+## 呼び出し側がデータをコピーするタイミングを決める (C-CALLER-CONTROL)
 
-If a function requires ownership of an argument, it should take ownership of the
-argument rather than borrowing and cloning the argument.
+引数の所有権を要する関数は、借用して複製するのではなく所有権を受け取るべきです。
 
 ```rust
-// Prefer this:
+// 良い例:
 fn foo(b: Bar) {
     /* use b as owned, directly */
 }
 
-// Over this:
+// 悪い例:
 fn foo(b: &Bar) {
     let b = b.clone();
     /* use b as owned after cloning */
 }
 ```
 
-If a function *does not* require ownership of an argument, it should take a
-shared or exclusive borrow of the argument rather than taking ownership and
-dropping the argument.
+もし関数が引数の所有権を必要としないのなら、
+所有権を取って最終的にdropする代わりに可変あるいは非可変借用を受け取るべきです。
 
 ```rust
-// Prefer this:
+// 良い例:
 fn foo(b: &Bar) {
     /* use b as borrowed */
 }
 
-// Over this:
+// 悪い例:
 fn foo(b: Bar) {
     /* use b as borrowed, it is implicitly dropped before function returns */
 }
 ```
 
-The `Copy` trait should only be used as a bound when absolutely needed, not as a
-way of signaling that copies should be cheap to make.
+`Copy`トレイトは本当に必要な場合のみ使用してください。
+単に低コストでコピーが可能であると伝えるために使用してはいけません。
 
 
 <a id="c-generic"></a>
-## Functions minimize assumptions about parameters by using generics (C-GENERIC)
+## ジェネリクスを用いて関数の引数に対する制限を最小にしている (C-GENERIC)
 
-The fewer assumptions a function makes about its inputs, the more widely usable
-it becomes.
+関数の引数に対する制約が少ないほど、その関数は幅広く使えるようになります。
 
-Prefer
+単にイテレーションが必要なだけであれば、このようにジェネリクスを用いてください。
 
 ```rust
 fn foo<I: IntoIterator<Item = i64>>(iter: I) { /* ... */ }
 ```
 
-over any of
+特定の型を指定しないでください。
 
 ```rust
 fn foo(c: &[i64]) { /* ... */ }
@@ -89,65 +80,51 @@ fn foo(c: &Vec<i64>) { /* ... */ }
 fn foo(c: &SomeOtherCollection<i64>) { /* ... */ }
 ```
 
-if the function only needs to iterate over the data.
+もっと言えば、ジェネリクスを用い、関数の引数に対して必要な制約を正確に示してください。
 
-More generally, consider using generics to pinpoint the assumptions a function
-needs to make about its arguments.
+### ジェネリクスの利点
 
-### Advantages of generics
+* _再利用性_。ジェネリックな関数は受け取る型への明確な要件を示しつつ、
+  多くの型に対して適用できます。
 
-* _Reusability_. Generic functions can be applied to an open-ended collection of
-  types, while giving a clear contract for the functionality those types must
-  provide.
+* _スタティックディスパッチと最適化_。ジェネリック関数を呼び出すと特定の型に特殊化("monomorphized")されます。
+  トレイトメソッドの呼び出しはスタティックかつ実装を直接呼び出す形に変換され、
+  コンパイラは呼び出しをインライン化し最適化することが可能です。
 
-* _Static dispatch and optimization_. Each use of a generic function is
-  specialized ("monomorphized") to the particular types implementing the trait
-  bounds, which means that (1) invocations of trait methods are static, direct
-  calls to the implementation and (2) the compiler can inline and otherwise
-  optimize these calls.
+* _レイアウトのインライン化_。構造体型や列挙型がジェネリックな型`T`を持つとき、
+  型`T`の値へは間接的なアクセスを挟むことなく、構造体型や列挙型の内部にインライン化されます。
 
-* _Inline layout_. If a `struct` and `enum` type is generic over some type
-  parameter `T`, values of type `T` will be laid out inline in the
-  `struct`/`enum`, without any indirection.
+* _推論_。ジェネリック関数の型パラメータは大抵推論が可能であるため、
+  明示的な変換やその他のメソッド呼び出しといったコード中の冗長な部分を削減することが可能です。
 
-* _Inference_. Since the type parameters to generic functions can usually be
-  inferred, generic functions can help cut down on verbosity in code where
-  explicit conversions or other method calls would usually be necessary.
-
-* _Precise types_. Because generic give a _name_ to the specific type
-  implementing a trait, it is possible to be precise about places where that
-  exact type is required or produced. For example, a function
+* _正確な型_。ジェネリクスによって型に名前を与えられるため、
+  正確にその型を受け取りあるいは生成する箇所を指定することができます。
+  例えば、次の関数は全く同じ型`T`を受け取り、返すことが保証されます。
+  `Trait`を実装する異なる型を用いて呼び出したりすることはできません。
 
   ```rust
   fn binary<T: Trait>(x: T, y: T) -> T
   ```
 
-  is guaranteed to consume and produce elements of exactly the same type `T`; it
-  cannot be invoked with parameters of different types that both implement
-  `Trait`.
 
-### Disadvantages of generics
+### ジェネリクスの欠点
 
-* _Code size_. Specializing generic functions means that the function body is
-  duplicated. The increase in code size must be weighed against the performance
-  benefits of static dispatch.
+* _コードサイズ_。ジェネリック関数の特殊化により、関数の中身は複製されます。
+  コードサイズの増大がパフォーマンスと釣り合うかどうか検討するべきです。
 
-* _Homogeneous types_. This is the other side of the "precise types" coin: if
-  `T` is a type parameter, it stands for a _single_ actual type. So for example
-  a `Vec<T>` contains elements of a single concrete type (and, indeed, the
-  vector representation is specialized to lay these out in line). Sometimes
-  heterogeneous collections are useful; see [trait objects][C-OBJECT].
+* _一様な型_。これは型が正確であることの裏返しです。型パラメータ`T`は一つの実際の型をもちます。
+  例えば`Vec<T>`は単一の具体型のコレクションです(そして内部的にはメモリ上に隣り合って並べられます)。
+  一様でないコレクションが有用な場合もあります。[trait objects][C-OBJECT]を参照してください。
 
-* _Signature verbosity_. Heavy use of generics can make it more difficult to
-  read and understand a function's signature.
+* _関数の定義の複雑化_。ジェネリクスを多用すると、関数の定義を読んだり理解することが難しくなります。
 
 [C-OBJECT]: #c-object
 
-### Examples from the standard library
+### 標準ライブラリの例
 
-- [`std::fs::File::open`] takes an argument of generic type `AsRef<Path>`. This
-  allows files to be opened conveniently from a string literal `"f.txt"`, a
-  [`Path`], an [`OsString`], and a few other types.
+- [`std::fs::File::open`]は`AsRef<Path>`というジェネリックな型を取ります。
+  これにより、文字列リテラル`"f.txt"`や[`Path`]、あるいは[`OsString`]などを渡して
+  ファイルを開くことができます。
 
 [`std::fs::File::open`]: https://doc.rust-lang.org/std/fs/struct.File.html#method.open
 [`Path`]: https://doc.rust-lang.org/std/path/struct.Path.html
@@ -155,20 +132,19 @@ needs to make about its arguments.
 
 
 <a id="c-object"></a>
-## Traits are object-safe if they may be useful as a trait object (C-OBJECT)
+## トレイトオブジェクトとして有用なトレイトがオブジェクトセーフになっている (C-OBJECT)
 
-Trait objects have some significant limitations: methods invoked through a trait
-object cannot use generics, and cannot use `Self` except in receiver position.
+トレイトオブジェクトには大きな制約があります。それは、トレイトオブジェクト経由で呼ばれるメソッドは
+ジェネリクスを使用できず、また`Self`をレシーバ以外の引数で使用できないことです。
 
-When designing a trait, decide early on whether the trait will be used as an
-object or as a bound on generics.
+トレイトを設計する際、そのトレイトがオブジェクトとして使用されるのか
+ジェネリクスの境界として使用されるのかを決めておく必要があります。
 
-If a trait is meant to be used as an object, its methods should take and return
-trait objects rather than use generics.
+そのトレイトがオブジェクトとして使用されることを念頭に置くならば、
+トレイトメソッドではジェネリクスの代わりにトレイトオブジェクトを使用すべきです。
 
-A `where` clause of `Self: Sized` may be used to exclude specific methods from
-the trait's object. The following trait is not object-safe due to the generic
-method.
+`Self: Sized`という`where`節を用いることで、特定のメソッドをトレイトオブジェクトから除外することができます。
+次のトレイトはジェネリックなメソッドを持つためオブジェクトセーフではありません。
 
 ```rust
 trait MyTrait {
@@ -178,8 +154,8 @@ trait MyTrait {
 }
 ```
 
-Adding a requirement of `Self: Sized` to the generic method excludes it from the
-trait object and makes the trait object-safe.
+ジェネリックなメソッドに`Self: Sized`を要求させることでトレイトオブジェクトから除外し、
+そのトレイトをオブジェクトセーフにすることが可能です。
 
 ```rust
 trait MyTrait {
@@ -189,25 +165,25 @@ trait MyTrait {
 }
 ```
 
-### Advantages of trait objects
+### トレイトオブジェクトの利点
 
-* _Heterogeneity_. When you need it, you really need it.
-* _Code size_. Unlike generics, trait objects do not generate specialized
-  (monomorphized) versions of code, which can greatly reduce code size.
+* _一様性_。これ無しでは解決できない問題もあります。
+* _コードサイズ_。ジェネリクスと異なり、トレイトオブジェクトは特殊化(monomorphized)されたコードを生成しないため、
+  コードサイズを大幅に削減することができます。
 
-### Disadvantages of trait objects
+### トレイトオブジェクトの欠点
 
-* _No generic methods_. Trait objects cannot currently provide generic methods.
-* _Dynamic dispatch and fat pointers_. Trait objects inherently involve
-  indirection and vtable dispatch, which can carry a performance penalty.
-* _No Self_. Except for the method receiver argument, methods on trait objects
-  cannot use the `Self` type.
+* _ジェネリックなメソッドが使えない_。トレイトオブジェクトは今のところジェネリックなメソッドを
+  持つことができません。
+* _動的ディスパッチとファットポインタ_。トレイトオブジェクトは、パフォーマンスに影響する可能性のある
+  間接アクセスと仮想関数テーブルによるディスパッチを引き起こします。
+* _Selfが使えない_。メソッドのレシーバ引数を除いて`Self`型を取ることはできません。
 
-### Examples from the standard library
+### 標準ライブラリでの例
 
-- The [`io::Read`] and [`io::Write`] traits are often used as objects.
-- The [`Iterator`] trait has several generic methods marked with `where Self:
-  Sized` to retain the ability to use `Iterator` as an object.
+- [`io::Read`]と[`io::Write`]は頻繁にオブジェクトとして使われます。
+- [`Iterator`]には、トレイトオブジェクトとして使用できるようにするため、
+  `Self: Sized`が指定されたジェネリックなメソッドがあります。
 
 [`io::Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
 [`io::Write`]: https://doc.rust-lang.org/std/io/trait.Write.html

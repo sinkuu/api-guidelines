@@ -1,92 +1,78 @@
-# Dependability
+# 信頼性
 
 
 <a id="c-validate"></a>
-## Functions validate their arguments (C-VALIDATE)
+## 関数が引数を検証している (C-VALIDATE)
 
-Rust APIs do _not_ generally follow the [robustness principle]: "be conservative
-in what you send; be liberal in what you accept".
+RustでのAPIは「送るものに関しては厳密に、受け取るものに関しては寛容に」という[堅牢性原則]には縛られません。
 
-[robustness principle]: http://en.wikipedia.org/wiki/Robustness_principle
+[堅牢性原則]: http://en.wikipedia.org/wiki/Robustness_principle
 
-Instead, Rust code should _enforce_ the validity of input whenever practical.
+代わりに、Rustコードは可能なかぎり入力の正しさを _検証_ すべきです。
 
-Enforcement can be achieved through the following mechanisms (listed in order of
-preference).
+この検証は、以下のようにして行うことができます(より推奨されるものの順に並んでいます)。
 
-### Static enforcement
+### 静的な検証
 
-Choose an argument type that rules out bad inputs.
+不正な値を受け付けないよう引数の型を選んでください。
 
-For example, prefer
+例えば次のようにします。
 
 ```rust
 fn foo(a: Ascii) { /* ... */ }
 ```
 
-over
+このようにしてはいけません。
 
 ```rust
 fn foo(a: u8) { /* ... */ }
 ```
 
-where `Ascii` is a _wrapper_ around `u8` that guarantees the highest bit is
-zero; see newtype patterns ([C-NEWTYPE]) for more details on creating typesafe
-wrappers.
+ここで`Ascii`は`u8`の _ラッパ_ であり、最上位ビットがゼロであることを保証します。
+型安全なラッパを作る方法はnewtypeパターン([C-NEWTYPE])を参照してください。
 
-Static enforcement usually comes at little run-time cost: it pushes the costs to
-the boundaries (e.g. when a `u8` is first converted into an `Ascii`). It also
-catches bugs early, during compilation, rather than through run-time failures.
+静的な検証は型の境界にコストを押し込む(例えば、`u8`は`Ascii`に変換しなければ受け付けない)ため、
+実行時コストが掛かることは余りありません。 また、実行時ではなくコンパイル中にバグが検出されます。
 
-On the other hand, some properties are difficult or impossible to express using
-types.
+一方、型を用いて表すことが困難あるいは不可能な特性も存在します。
 
 [C-NEWTYPE]: type-safety.html#c-newtype
 
-### Dynamic enforcement
+### 動的な検証
 
-Validate the input as it is processed (or ahead of time, if necessary). Dynamic
-checking is often easier to implement than static checking, but has several
-downsides:
+入力を処理と同時に(あるいは必要ならば事前に)検証します。
+動的な検証は静的な検証よりも実装が簡単ですが、いくつかの欠点があります。
 
-1. Runtime overhead (unless checking can be done as part of processing the
-   input).
-2. Delayed detection of bugs.
-3. Introduces failure cases, either via `panic!` or `Result`/`Option` types,
-   which must then be dealt with by client code.
+1. 実行時コスト (処理と検証を同時に行うことができない場合)
+2. バグの検出が遅れます
+3. パニックや`Result`/`Option`型による失敗ケースを呼び出し側のコードで処理しなければなりません
 
-#### Dynamic enforcement with `debug_assert!`
+#### `debug_assert!`による動的な検証
 
-Same as dynamic enforcement, but with the possibility of easily turning off
-expensive checks for production builds.
+プロダクションビルドにおいて高コストな検証を行わないようにできるかもしれません。
 
-#### Dynamic enforcement with opt-out
+#### 動的な検証のオプトアウト
 
-Same as dynamic enforcement, but adds sibling functions that opt out of the
-checking.
+チェックを行わないバージョンの関数を追加します。
 
-The convention is to mark these opt-out functions with a suffix like
-`_unchecked` or by placing them in a `raw` submodule.
+チェックを行わない関数の名前の後ろに`_unchecked`と付けたり、`raw`という名前のモジュールに置かれたりするのが一般的です。
 
-The unchecked functions can be used judiciously in cases where (1) performance
-dictates avoiding checks and (2) the client is otherwise confident that the
-inputs are valid.
+チェックを行わない関数は(1)パフォーマンスがチェックよりも優先される場合
+(2)入力が正しいと呼び出し側が確信している場合に使うことができます。
 
 
 <a id="c-dtor-fail"></a>
-## Destructors never fail (C-DTOR-FAIL)
+## デストラクタが失敗しない (C-DTOR-FAIL)
 
-Destructors are executed on task failure, and in that context a failing
-destructor causes the program to abort.
+デストラクタはパニック時にも実行されますが、その際にさらにデストラクタ内でパニックすると
+プログラムは強制終了します。
 
-Instead of failing in a destructor, provide a separate method for checking for
-clean teardown, e.g. a `close` method, that returns a `Result` to signal
-problems.
+デストラクタでパニックする代わりに、`Result`を返して失敗を通知する`close`メソッドのような、
+失敗を確認することのできる破棄メソッドを追加してください。
 
 
 <a id="c-dtor-block"></a>
-## Destructors that may block have alternatives (C-DTOR-BLOCK)
+## ブロックする可能性のあるデストラクタには代替手段を用意する (C-DTOR-BLOCK)
 
-Similarly, destructors should not invoke blocking operations, which can make
-debugging much more difficult. Again, consider providing a separate method for
-preparing for an infallible, nonblocking teardown.
+デバッグが難しくなるため、デストラクタでブロックするような操作を行うべきではありません。
+ブロックせずに破棄を行える別のメソッドを追加するべきです。

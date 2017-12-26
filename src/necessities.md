@@ -1,23 +1,20 @@
-# Necessities
+# 必要事項
 
 
 <a id="c-stable"></a>
-## Public dependencies of a stable crate are stable (C-STABLE)
+## stableなクレートのパブリックな依存クレートがstableである (C-STABLE)
 
-A crate cannot be stable (>=1.0.0) without all of its public dependencies being
-stable.
+全てのパブリックな依存クレートがstable(>=1.0.0)とならない限り、クレートをstableにすることはできません。
 
-Public dependencies are crates from which types are used in the public API of
-the current crate.
+パブリックな依存性は、依存先に由来する型がそのクレートのパブリックなAPIに使われているものです。
 
 ```rust
 pub fn do_my_thing(arg: other_crate::TheirThing) { /* ... */ }
 ```
 
-A crate containing this function cannot be stable unless `other_crate` is also
-stable.
+この関数を含むクレートは、`other_crate`がstableにならない限りstableになりません。
 
-Be careful because public dependencies can sneak in at unexpected places.
+パブリックな依存制は思わぬ所に潜んでいることがあるため、注意が必要です。
 
 ```rust
 pub struct Error {
@@ -26,13 +23,11 @@ pub struct Error {
 
 enum ErrorImpl {
     Io(io::Error),
-    // Should be okay even if other_crate isn't
-    // stable, because ErrorImpl is private.
+    // ErrorImplはプライベートなので、other_crateがstableでなくても問題ないはず。
     Dep(other_crate::Error),
 }
 
-// Oh no! This puts other_crate into the public API
-// of the current crate.
+// いや、ここでother_crateをパブリックなAPIの一部にしてしまっている。
 impl From<other_crate::Error> for Error {
     fn from(err: other_crate::Error) -> Self {
         Error { private: ErrorImpl::Dep(err) }
@@ -42,24 +37,23 @@ impl From<other_crate::Error> for Error {
 
 
 <a id="c-permissive"></a>
-## Crate and its dependencies have a permissive license (C-PERMISSIVE)
+## クレートとその依存先がpermissiveなライセンスの下にある (C-PERMISSIVE)
 
-The software produced by the Rust project is dual-licensed, under either the
-[MIT] or [Apache 2.0] licenses. Crates that simply need the maximum
-compatibility with the Rust ecosystem are recommended to do the same, in the
-manner described herein. Other options are described below.
+Rustプロジェクトによって公開されているソフトウェアは[MIT]と[Apache 2.0]
+のデュアルライセンス下にあります。
+Rustエコシステムとの最大の協調性が必要なクレートは同じようにするべきです。
+その他の選択肢も以下に提示します。
 
-These API guidelines do not provide a detailed explanation of Rust's license,
-but there is a small amount said in the [Rust FAQ]. These guidelines are
-concerned with matters of interoperability with Rust, and are not comprehensive
-over licensing options.
+Rustのライセンスに関しては[Rust FAQ]で幾分かの言及がなされていますが、
+このAPIガイドラインでは詳しい説明は行いません。
+これはライセンスに関する解説ではなく、Rustとの協調性に関するガイドラインだからです。
 
 [MIT]: https://github.com/rust-lang/rust/blob/master/LICENSE-MIT
 [Apache 2.0]: https://github.com/rust-lang/rust/blob/master/LICENSE-APACHE
 [Rust FAQ]: https://www.rust-lang.org/en-US/faq.html#why-a-dual-mit-asl2-license
 
-To apply the Rust license to your project, define the `license` field in your
-`Cargo.toml` as:
+Rustと同等のライセンスをあなたのプロジェクトに適用したい場合、次のように
+`Cargo.toml`中の`license`フィールドを設定してください。
 
 ```toml
 [package]
@@ -69,7 +63,7 @@ authors = ["..."]
 license = "MIT/Apache-2.0"
 ```
 
-And toward the end of your README.md:
+そして、README.mdの最後に以下を追加してください。
 
 ```
 ## License
@@ -90,17 +84,14 @@ for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
 ```
 
-Besides the dual MIT/Apache-2.0 license, another common licensing approach used
-by Rust crate authors is to apply a single permissive license such as MIT or
-BSD. This license scheme is also entirely compatible with Rust's, because it
-imposes the minimal restrictions of Rust's MIT license.
+MIT/Apache-2.0のデュアルライセンスの他に、Rustのクレート開発者によってよく使われるのは
+MITやBSDのようなpermissiveなライセンスを単体で利用することです。
+このやり方でも、小さな制約が加わってしまうだけでRustとの互換性はあります。
 
-Crates that desire perfect license compatibility with Rust are not recommended
-to choose only the Apache license. The Apache license, though it is a permissive
-license, imposes restrictions beyond the MIT and BSD licenses that can
-discourage or prevent their use in some scenarios, so Apache-only software
-cannot be used in some situations where most of the Rust runtime stack can.
+Rustとの完全なライセンス互換性が必要なら、Apacheライセンス単体を用いることは推奨されません。
+Apacheライセンスはpermissiveではありますが、MITやBSDより大きな制約を課しているため、
+デュアルライセンスのRust本体は使うことができるにも関わらず
+Apacheライセンスのみのソフトウェアを使うことのできない状況が存在するからです。
 
-The license of a crate's dependencies can affect the restrictions on
-distribution of the crate itself, so a permissively-licensed crate should
-generally only depend on permissively-licensed crates.
+クレートの依存先のライセンスはクレート自身の配布にも制約を与える可能性があるため、
+permissiveなライセンスのクレートはpermissiveなライセンスのクレートにのみ依存するべきです。

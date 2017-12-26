@@ -1,85 +1,83 @@
-# Naming
+# 命名
 
 
 <a id="c-case"></a>
-## Casing conforms to RFC 430 (C-CASE)
+## 大文字・小文字の使い分けがRFC430に従っている (C-CASE)
 
-Basic Rust naming conventions are described in [RFC 430].
+Rustにおける基本的な命名規則は[RFC 430]に記述されています。
 
-In general, Rust tends to use `CamelCase` for "type-level" constructs (types and
-traits) and `snake_case` for "value-level" constructs. More precisely:
+Rustは「型レベル」のもの(型やトレイト)に`CamelCase`、
+「値レベル」のものに`snake_case`を使用する傾向があります。
+正確には、次表のように命名します。
 
-| Item | Convention |
+| アイテム | 規則 |
 | ---- | ---------- |
-| Crates | [unclear](https://github.com/rust-lang-nursery/api-guidelines/issues/29) |
-| Modules | `snake_case` |
-| Types | `CamelCase` |
-| Traits | `CamelCase` |
-| Enum variants | `CamelCase` |
-| Functions | `snake_case` |
-| Methods | `snake_case` |
-| General constructors | `new` or `with_more_details` |
-| Conversion constructors | `from_some_other_type` |
-| Macros | `snake_case!` |
-| Local variables | `snake_case` |
-| Statics | `SCREAMING_SNAKE_CASE` |
-| Constants | `SCREAMING_SNAKE_CASE` |
-| Type parameters | concise `CamelCase`, usually single uppercase letter: `T` |
-| Lifetimes | short `lowercase`, usually a single letter: `'a`, `'de`, `'src` |
-| Features | [unclear](https://github.com/rust-lang-nursery/api-guidelines/issues/101) but see [C-FEATURE] |
+| クレート | [不明](https://github.com/rust-lang-nursery/api-guidelines/issues/29) |
+| モジュール | `snake_case` |
+| 型 | `CamelCase` |
+| トレイト | `CamelCase` |
+| Enumのバリアント | `CamelCase` |
+| 関数 | `snake_case` |
+| メソッド | `snake_case` |
+| 一般のコンストラクタ | `new` or `with_more_details` |
+| 変換を行うコンストラクタ | `from_some_other_type` |
+| マクロ | `snake_case!` |
+| ローカル変数 | `snake_case` |
+| スタティック変数 | `SCREAMING_SNAKE_CASE` |
+| 定数 | `SCREAMING_SNAKE_CASE` |
+| 型パラメータ | concise `CamelCase`, usually single uppercase letter: `T` |
+| ライフタイム | short `lowercase`, usually a single letter: `'a`, `'de`, `'src` |
+| Feature | [不明](https://github.com/rust-lang-nursery/api-guidelines/issues/101)、ただし[C-FEATURE]を参照 |
 
-In `CamelCase`, acronyms and contractions of compound words count as one word: use `Uuid` rather than `UUID`, `Usize` rather than `USize` or `Stdin` rather than `StdIn`. In `snake_case`, acronyms and contractions are lower-cased: `is_xid_start`.
+頭字語や複合語は、`CamelCase`では一語に数えます。例えば`UUID`ではなく`Uuid`を使い、`USize`ではなく`Usize`、`StdIn`ではなく`Stdin`を使って下さい。
+`snake_case`では`is_xid_start`のように小文字にします。
 
-In `snake_case` or `SCREAMING_SNAKE_CASE`, a "word" should never consist of a
-single letter unless it is the last "word". So, we have `btree_map` rather than
-`b_tree_map`, but `PI_2` rather than `PI2`.
+`snake_case`または`SCREAMING_SNAKE_CASE`では、
+それが最後の文字を除いて一文字で区切ってはいけません。
+例えば、`b_tree_map`ではなく`btree_map`としますが、`PI2`ではなく`PI_2`とします。
 
-Crate names should not use `-rs` or `-rust` as a suffix or prefix. Every crate
-is Rust! It serves no purpose to remind users of this constantly.
+クレート名の前後に`-rs`や`-rust`を付けるべきではありません。
+全てのクレートがRust製であることは分かりきっています!
+そのことをユーザに常に知らせ続ける必要はありません。
+(訳注: レポジトリ名等ではなく、Cargo.tomlで指定するクレート名についての指針です)
 
 [RFC 430]: https://github.com/rust-lang/rfcs/blob/master/text/0430-finalizing-naming-conventions.md
 [C-FEATURE]: #c-feature
 
-### Examples from the standard library
+### 標準ライブラリでの例
 
-The whole standard library. This guideline should be easy!
+この規則は標準ライブラリの全体に渡って使用されています。
 
 
 <a id="c-conv"></a>
-## Ad-hoc conversions follow `as_`, `to_`, `into_` conventions (C-CONV)
+## 変換メソッドに`as_`, `to_`, `into_`を使っている (C-CONV)
 
-Conversions should be provided as methods, with names prefixed as follows:
+変換メソッドの名前には次のプレフィクスを付けるべきです。
 
-| Prefix | Cost | Ownership |
+| プレフィクス | コスト | 所有権 |
 | ------ | ---- | --------- |
-| `as_` | Free | borrowed -\> borrowed |
-| `to_` | Expensive | borrowed -\> borrowed<br>borrowed -\> owned (non-Copy types)<br>owned -\> owned (Copy types) |
-| `into_` | Variable | owned -\> owned (non-Copy types) |
+| `as_` | 低い | 借用 -\> 借用 |
+| `to_` | 高い | 借用 -\> 借用<br>借用 -\> 所有 (Copyでない型)<br>所有 -\> 所有 (Copy型) |
+| `into_` | 可変 | 所有 -\> 所有 (Copyでない型) |
 
-For example:
+以下に例を挙げます。
 
-- [`str::as_bytes()`] gives a view of a `str` as a slice of UTF-8 bytes, which
-  is free. The input is a borrowed `&str` and the output is a borrowed `&[u8]`.
-- [`Path::to_str`] performs an expensive UTF-8 check on the bytes of an
-  operating system path. The input and output are both borrowed. It would not be
-  correct to call this `as_str` because this method has nontrivial cost at
-  runtime.
-- [`str::to_lowercase()`] produces the Unicode-correct lowercase equivalent of a
-  `str`, which involves iterating through characters of the string and may
-  require memory allocation. The input is a borrowed `&str` and the output is an
-  owned `String`.
-- [`f64::to_radians()`] converts a floating point quantity from degrees to
-  radians. The input is `f64`. Passing a reference `&f64` is not warranted
-  because `f64` is cheap to copy. Calling the function `into_radians` would be
-  misleading because the input is not consumed.
-- [`String::into_bytes()`] extracts the underlying `Vec<u8>` of a `String`,
-  which is free. It takes ownership of a `String` and returns an owned
-  `Vec<u8>`.
-- [`BufReader::into_inner()`] takes ownership of a buffered reader and extracts
-  out the underlying reader, which is free. Data in the buffer is discarded.
-- [`BufWriter::into_inner()`] takes ownership of a buffered writer and extracts
-  out the underlying writer, which requires a potentially expensive flush of any
-  buffered data.
+- [`str::as_bytes()`]はコストなしに、`str`をUTF-8バイト列として見たビューを返します。
+  入力は借用された`&str`で出力は借用された`&[u8]`です。
+- [`Path::to_str`]はOSの与えるパスのバイト列に対し、コストの高いUTF-8チェックを行います。 
+  入出力はともに借用されています。小さくない実行時コストがあるため、これを`as_str`と呼ぶことはできません。
+- [`str::to_lowercase()`]はUnicode規格に沿って`str`を小文字に変換したものを返します。
+  この処理は文字列のデコードを含み、またメモリの確保も行うでしょう。
+  入力は借用された`&str`で出力は所有された`String`です。
+- [`f64::to_radians()`]は浮動小数点数で表された角度を度からラジアンに変換します。
+  入力は`f64`です。これが`&f64`でないのは、コピーに殆どコストが掛からないためです。
+  入力が消費されないので、このメソッドを`into_radians`と呼ぶのはミスリーディングです。
+- [`String::into_bytes()`]は`String`がラップしている`Vec<u8>`を取り出します。
+  この処理にコストは掛かりません。このメソッドは`String`の所有権を得て、所有された`Vec<u8>`を返します。
+- [`BufReader::into_inner()`]はバッファリングされたreaderの所有権を得て、ラップされていたreaderを取り出します。
+  この処理にコストは掛かりません。バッファ内のデータは破棄されます。
+- [`BufWriter::into_inner()`]はバッファリングされたwriterの所有権を得て、ラップされていたwriterを取り出します。
+  この処理にはコストの掛かるバッファのフラッシングが必要なことがあります。
 
 [`str::as_bytes()`]: https://doc.rust-lang.org/std/primitive.str.html#method.as_bytes
 [`Path::to_str`]: https://doc.rust-lang.org/std/path/struct.Path.html#method.to_str
@@ -89,26 +87,24 @@ For example:
 [`BufReader::into_inner()`]: https://doc.rust-lang.org/std/io/struct.BufReader.html#method.into_inner
 [`BufWriter::into_inner()`]: https://doc.rust-lang.org/std/io/struct.BufWriter.html#method.into_inner
 
-Conversions prefixed `as_` and `into_` typically _decrease abstraction_, either
-exposing a view into the underlying representation (`as`) or deconstructing data
-into its underlying representation (`into`). Conversions prefixed `to_`, on the
-other hand, typically stay at the same level of abstraction but do some work to
-change one representation into another.
+`as_`や`into_`の付くような変換メソッドは一般に抽象を弱めます。
+内部表現を公開したり(`as`)、データを内部表現に分解したり(`into`)することになるからです。
+一方で、`to_`と付くような変換メソッドは一般に抽象レベルを保てることが多いですが、
+内部で何らかの処理を行いデータの表現方法を変換する必要があります。
 
-When a type wraps a single value to associate it with higher-level semantics,
-access to the wrapped value should be provided by an `into_inner()` method. This
-applies to wrappers that provide buffering like [`BufReader`], encoding or
-decoding like [`GzDecoder`], atomic access like [`AtomicBool`], or any similar
-semantics.
+ある値をラップして高レベルの意味を持たせるような型において、
+ラップされた型にアクセスさせる手段は`into_inner()`メソッドによって提供されるべきです。
+これは例えば、バッファリングを提供する[`BufReader`]や、
+エンコード・デコードを行う[`GzDecoder`]、
+アトミックなアクセスを提供する[`AtomicBool`]といった型のようなセマンティクスを持つ型に適用できます。
 
 [`BufReader`]: https://doc.rust-lang.org/std/io/struct.BufReader.html#method.into_inner
 [`GzDecoder`]: https://docs.rs/flate2/0.2.19/flate2/read/struct.GzDecoder.html#method.into_inner
 [`AtomicBool`]: https://doc.rust-lang.org/std/sync/atomic/struct.AtomicBool.html#method.into_inner
 
-If the `mut` qualifier in the name of a conversion method constitutes part of
-the return type, it should appear as it would appear in the type. For example
-[`Vec::as_mut_slice`] returns a mut slice; it does what it says. This name is
-preferred over `as_slice_mut`.
+変換メソッドの名前に`mut`を含めるときは、返り値の型の記述と同じ順番にしてください。
+例えば[`Vec::as_mut_slice`]はミュータブルは名前の通りスライスを返します。
+例えば`as_slice_mut`等よりもこのような命名が推奨されます。
 
 [`Vec::as_mut_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_mut_slice
 
@@ -117,7 +113,7 @@ preferred over `as_slice_mut`.
 fn as_mut_slice(&mut self) -> &mut [T];
 ```
 
-##### More examples from the standard library
+##### 標準ライブラリでのさらなる例
 
 - [`Result::as_ref`](https://doc.rust-lang.org/std/result/enum.Result.html#method.as_ref)
 - [`RefCell::as_ptr`](https://doc.rust-lang.org/std/cell/struct.RefCell.html#method.as_ptr)
@@ -126,9 +122,9 @@ fn as_mut_slice(&mut self) -> &mut [T];
 
 
 <a id="c-getter"></a>
-## Getter names follow Rust convention (C-GETTER)
+## Getterの名前がRustの規則に従っている (C-GETTER)
 
-With a few exceptions, the `get_` prefix is not used for getters in Rust code.
+後述するような例外を除き、getterの名前を`get_`で始めるべきではありません。
 
 ```rust
 pub struct S {
@@ -149,15 +145,14 @@ impl S {
 }
 ```
 
-The `get` naming is used only when there is a single and obvious thing that
-could reasonably be gotten by a getter. For example [`Cell::get`] accesses the
-content of a `Cell`.
+`get`という命名は、getterによって得られるものが自明である場合にのみ使用されるべきです。
+例えば、[`Cell::get`]は`Cell`の中身を返します。
 
 [`Cell::get`]: https://doc.rust-lang.org/std/cell/struct.Cell.html#method.get
 
-For getters that do runtime validation such as bounds checking, consider adding
-unsafe `_unchecked` variants. Typically those will have the following
-signatures.
+境界検査といった、実行時のバリデーションが必要なgetterには、
+unsafeな`_unchecked`版も用意できないか検討してください。
+そのようなメソッドの宣言はふつう、以下のようになります。
 
 ```rust
 fn get(&self, index: K) -> Option<&V>;
@@ -166,17 +161,16 @@ unsafe fn get_unchecked(&self, index: K) -> &V;
 unsafe fn get_unchecked_mut(&mut self, index: K) -> &mut V;
 ```
 
-The difference between getters and conversions ([C-CONV](#c-conv)) can be subtle
-and is not always clear-cut. For example [`TempDir::path`] can be understood as
-a getter for the filesystem path of the temporary directory, while
-[`TempDir::into_path`] is a conversion that transfers responsibility for
-deleting the temporary directory to the caller. Since `path` is a getter, it
-would not be correct to call it `get_path` or `as_path`.
+getterと変換([C-CONV](#c-conv))の間の違いは往々にして微かなもので、
+常に境界がハッキリしている訳ではありません。
+例えば[`TempDir::path`]は一時ディレクトリのファイルシステム上のパスのgetterとして捉えられますが、
+[`TempDir::into_path`]は一時ディレクトリを削除する責任を呼び出し側に移す変換メソッドです。
+このような場合`path`はgetterなので、`get_path`や`as_path`と呼ぶことは正しくありません。
 
 [`TempDir::path`]: https://docs.rs/tempdir/0.3.5/tempdir/struct.TempDir.html#method.path
 [`TempDir::into_path`]: https://docs.rs/tempdir/0.3.5/tempdir/struct.TempDir.html#method.into_path
 
-### Examples from the standard library
+### 標準ライブラリでのさらなる例
 
 - [`std::io::Cursor::get_mut`](https://doc.rust-lang.org/std/io/struct.Cursor.html#method.get_mut)
 - [`std::ptr::Unique::get_mut`](https://doc.rust-lang.org/std/ptr/struct.Unique.html#method.get_mut)
@@ -187,11 +181,11 @@ would not be correct to call it `get_path` or `as_path`.
 
 
 <a id="c-iter"></a>
-## Methods on collections that produce iterators follow `iter`, `iter_mut`, `into_iter` (C-ITER)
+## イテレータを生成するメソッドの名前が`iter`, `iter_mut`, `into_iter`となっている ([C-ITER])
 
-Per [RFC 199].
+[RFC 199]に従ってください。
 
-For a container with elements of type `U`, iterator methods should be named:
+`U`という型の要素を持つコンテナの場合、イテレータを生成するメソッドは次のように命名するべきです。
 
 ```rust
 fn iter(&self) -> Iter             // Iter implements Iterator<Item = &U>
@@ -199,25 +193,22 @@ fn iter_mut(&mut self) -> IterMut  // IterMut implements Iterator<Item = &mut U>
 fn into_iter(self) -> IntoIter     // IntoIter implements Iterator<Item = U>
 ```
 
-This guideline applies to data structures that are conceptually homogeneous
-collections. As a counterexample, the `str` type is slice of bytes that are
-guaranteed to be valid UTF-8. This is conceptually more nuanced than a
-homogeneous collection so rather than providing the
-`iter`/`iter_mut`/`into_iter` group of iterator methods, it provides
-[`str::bytes`] to iterate as bytes and [`str::chars`] to iterate as chars.
+この指針は全ての要素が同質であると意味付けられたコレクションに対して適用されます。
+例えば`str`はバイト列ですが、有効なUTF-8であるという保証があるため、この指針は適用できません。
+従って`iter`/`iter_mut`/`into_iter`といったメソッド群ではなく、
+バイト列としてイテレートする[`str::bytes`]、キャラクタ列としてイテレートする[`str::chars`]を持ちます。
 
 [`str::bytes`]: https://doc.rust-lang.org/std/primitive.str.html#method.bytes
 [`str::chars`]: https://doc.rust-lang.org/std/primitive.str.html#method.chars
 
-This guideline applies to methods only, not functions. For example
-[`percent_encode`] from the `url` crate returns an iterator over percent-encoded
-string fragments. There would be no clarity to be had by using an
-`iter`/`iter_mut`/`into_iter` convention.
+このガイドラインはメソッドにのみ適用され、関数は対象外です。
+例えば`url`クレートの[`percent_encode`]は文字列をパーセントエンコーディングしていくイテレータを返します。
+この場合、`iter`/`iter_mut`/`into_iter`といった命名を使うことに利点はありません。
 
 [`percent_encode`]: https://docs.rs/url/1.4.0/url/percent_encoding/fn.percent_encode.html
 [RFC 199]: https://github.com/rust-lang/rfcs/blob/master/text/0199-ownership-variants.md
 
-### Examples from the standard library
+### 標準ライブラリでの例
 
 - [`Vec::iter`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter)
 - [`Vec::iter_mut`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter_mut)
@@ -227,29 +218,28 @@ string fragments. There would be no clarity to be had by using an
 
 
 <a id="c-iter-ty"></a>
-## Iterator type names match the methods that produce them (C-ITER-TY)
+## イテレータの型名が、それを生成するメソッドと揃っている (C-ITER-TY)
 
-A method called `into_iter()` should return a type called `IntoIter` and
-similarly for all other methods that return iterators.
+`into_iter`というメソッドは`IntoIter`という型を返すべきです。
+他のイテレータを返すメソッドでも同様です。
 
-This guideline applies chiefly to methods, but often makes sense for functions
-as well. For example the [`percent_encode`] function from the `url` crate
-returns an iterator type called [`PercentEncode`][PercentEncode-type].
+この指針は主にメソッドに対して適用されますが、関数に対しても大抵は適用できます。
+例えば`url`クレートの[`percent_encode`]関数は[`PercentEncode`][PercentEncode-type]
+という型名のイテレータを返します。
 
 [PercentEncode-type]: https://docs.rs/url/1.4.0/url/percent_encoding/struct.PercentEncode.html
 
-These type names make the most sense when prefixed with their owning module, for
-example [`vec::IntoIter`].
+このような命名法は[`vec::IntoIter`]のようにモジュール名を付けて呼ぶ際に最も有用です。
 
 [`vec::IntoIter`]: https://doc.rust-lang.org/std/vec/struct.IntoIter.html
 
-### Examples from the standard library
+### 標準ライブラリでの例
 
-* [`Vec::iter`] returns [`Iter`][slice::Iter]
-* [`Vec::iter_mut`] returns [`IterMut`][slice::IterMut]
-* [`Vec::into_iter`] returns [`IntoIter`][vec::IntoIter]
-* [`BTreeMap::keys`] returns [`Keys`][btree_map::Keys]
-* [`BTreeMap::values`] returns [`Values`][btree_map::Values]
+* [`Vec::iter`] は [`Iter`][slice::Iter] を返す。
+* [`Vec::iter_mut`] は [`IterMut`][slice::IterMut] を返す。
+* [`Vec::into_iter`] は [`IntoIter`][vec::IntoIter] を返す。
+* [`BTreeMap::keys`] は [`Keys`][btree_map::Keys] を返す。
+* [`BTreeMap::values`] は [`Values`][btree_map::Values] を返す。
 
 [`Vec::iter`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter
 [slice::Iter]: https://doc.rust-lang.org/std/slice/struct.Iter.html
@@ -264,15 +254,15 @@ example [`vec::IntoIter`].
 
 
 <a id="c-feature"></a>
-## Feature names are free of placeholder words (C-FEATURE)
+## Featureの名前に余計な単語が入っていない (C-FEATURE)
 
-Do not include words in the name of a [Cargo feature] that convey zero meaning,
-as in `use-abc` or `with-abc`. Name the feature `abc` directly.
+[Cargoのfeature]の名前に意味のない単語を付けないでください。
+`use-abc`や`with-abc`などとせず、単に`abc`とするべきです。
 
-[Cargo feature]: http://doc.crates.io/manifest.html#the-features-section
+[Cargoのfeature]: http://doc.crates.io/manifest.html#the-features-section
 
-This arises most commonly for crates that have an optional dependency on the
-Rust standard library. The canonical way to do this correctly is:
+標準ライブラリへの依存がオプションである場合が最もよく目にする例でしょう。
+これを指針に従って行うと、以下のようになります。
 
 ```toml
 # In Cargo.toml
@@ -288,10 +278,10 @@ std = []
 #![cfg_attr(not(feature = "std"), no_std)]
 ```
 
-Do not call the feature `use-std` or `with-std` or any creative name that is not
-`std`. This naming convention aligns with the naming of implicit features
-inferred by Cargo for optional dependencies. Consider crate `x` with optional
-dependencies on Serde and on the Rust standard library:
+このfeatureに`std`以外の、`use-std`や`with-std`あるいはその他の独創的な名前を付けないでください。
+そうすることで、Cargoが暗黙的に追加するオプショナルな依存性のfeatureと沿った形になります。
+例えば`x`というクレートがSerdeと標準ライブラリに対する依存をオプションとして持つとき、
+
 
 ```toml
 [package]
@@ -305,20 +295,20 @@ std = ["serde/std"]
 serde = { version = "1.0", optional = true }
 ```
 
-When we depend on `x`, we can enable the optional Serde dependency with
-`features = ["serde"]`. Similarly we can enable the optional standard library
-dependency with `features = ["std"]`. The implicit feature inferred by Cargo for
-the optional dependency is called `serde`, not `use-serde` or `with-serde`, so
-we like for explicit features to behave the same way.
+のようになります。そして、さらに`x`に依存するとき、Serdeへの依存を
+`features = ["serde"]`で有効化できます。
+また、同じように標準ライブラリへの依存を`features = ["std"]`で有効化できます。
+Cargoによって暗黙的に追加されるfeatureは`serde`であり、`use-serde`でも`with-serde`でもありません。
+ですから、明示的なfeatureに対しても同じようにするべきなのです。
 
-As a related note, Cargo requires that features are additive so a feature named
-negatively like `no-abc` is practically never correct.
+関連事項として、Cargoのfeatureは追加式ですから、
+`no-abc`といったfeatureは大きな間違いです。
 
 
 <a id="c-word-order"></a>
-## Names use a consistent word order (C-WORD-ORDER)
+## 命名時に単語を並べる順番が揃っている (C-WORD-ORDER)
 
-Here are some error types from the standard library:
+標準ライブラリにおけるエラー型をいくつか示します。
 
 - [`JoinPathsError`](https://doc.rust-lang.org/std/env/struct.JoinPathsError.html)
 - [`ParseBoolError`](https://doc.rust-lang.org/std/str/struct.ParseBoolError.html)
@@ -328,10 +318,10 @@ Here are some error types from the standard library:
 - [`RecvTimeoutError`](https://doc.rust-lang.org/std/sync/mpsc/enum.RecvTimeoutError.html)
 - [`StripPrefixError`](https://doc.rust-lang.org/std/path/struct.StripPrefixError.html)
 
-All of these use verb-object-error word order. If we were adding an error to
-represent an address failing to parse, for consistency we would want to name it
-in verb-object-error order like `ParseAddrError` rather than `AddrParseError`.
+全て、動詞-オブジェクト-エラーの順番で並んでいます。
+もし新たにアドレスのパースに失敗したことを表すエラーを追加するならば、
+`AddrParseError`等ではなく、
+一貫性を考えて動詞-オブジェクト-エラーの順に並べ`ParseAddrError`とすべきです。
 
-The particular choice of word order is not important, but pay attention to
-consistency within the crate and consistency with similar functionality in the
-standard library.
+どの順番を選ぶかは大して重要ではありませんが、クレート内での一貫性、
+標準ライブラリの似た機能との整合性には注意してください。

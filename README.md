@@ -1,3 +1,5 @@
+非公式日本語訳です。
+
 # Rust API guidelines
 
 This is a set of recommendations on how to design and present APIs for

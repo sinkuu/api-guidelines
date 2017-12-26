@@ -1,25 +1,24 @@
-# Future proofing
+# 将来性
 
 
 <a id="c-sealed"></a>
-## Sealed traits protect against downstream implementations (C-SEALED)
+## sealedトレイトを使って下流の実装を適切に防いでいる (C-SEALED)
 
-Some traits are only meant to be implemented within the crate that defines them.
-In such cases, we can retain the ability to make changes to the trait in a
-non-breaking way by using the sealed trait pattern.
+そのクレート内でのみ実装されることを想定したトレイトについて、
+sealedトレイトパターンを用いることでユーザのコードを壊すことなしに変更を加えることが可能になります。
 
 ```rust
-/// This trait is sealed and cannot be implemented for types outside this crate.
+/// このトレイトはsealされているため、他のクレートで実装を追加することはできません。
 pub trait TheTrait: private::Sealed {
-    // Zero or more methods that the user is allowed to call.
+    // メソッド
     fn ...();
 
-    // Zero or more private methods, not allowed for user to call.
+    // ユーザが呼ぶべきでないプライベートメソッド
     #[doc(hidden)]
     fn ...();
 }
 
-// Implement for some types.
+// 実装
 impl TheTrait for usize {
     /* ... */
 }
@@ -27,51 +26,47 @@ impl TheTrait for usize {
 mod private {
     pub trait Sealed {}
 
-    // Implement for those same types, but no others.
+    // 同じ型に実装
     impl Sealed for usize {}
 }
 ```
 
-The empty private `Sealed` supertrait cannot be named by downstream crates, so
-we are guaranteed that implementations of `Sealed` (and therefore `TheTrait`)
-only exist in the current crate. We are free to add methods to `TheTrait` in a
-non-breaking release even though that would ordinarily be a breaking change for
-traits that are not sealed. Also we are free to change the signature of methods
-that are not publicly documented.
+プライベートな空の`Sealed`親トレイトを下流のクレートから参照することはできません。
+従って、`Sealed`(そして`TheTrait`)の実装はこのクレート内にのみ存在できます。
+トレイトにメソッドを追加することは一般的に破壊的変更となりますが、
+sealedトレイトである`TheTrait`にメソッドを追加することは破壊的変更になりません。
+また、ドキュメントに掲載されていないメソッドの定義も自由に変更することができます。
 
-Note that removing a public method or changing the signature of a public method
-in a sealed trait are still breaking changes.
+sealedトレイトからパブリックなメソッドを取り除いたり、
+定義を変更したりすることは依然として破壊的変更であることに注意してください。
 
-To avoid frustrated users trying to implement the trait, it should be documented
-in rustdoc that the trait is sealed and not meant to be implemented outside of
-the current crate.
+混乱したユーザがそれらのトレイトを実装しようとすることを防ぐため、
+そのトレイトはsealされており、他のクレートから実装されるべきものではないことを
+ドキュメントに記載しておくべきです。
 
-### Examples
+### 例
 
 - [`serde_json::value::Index`](https://docs.serde.rs/serde_json/value/trait.Index.html)
 - [`byteorder::ByteOrder`](https://docs.rs/byteorder/1.1.0/byteorder/trait.ByteOrder.html)
 
 
 <a id="c-struct-private"></a>
-## Structs have private fields (C-STRUCT-PRIVATE)
+## 構造体のフィールドを適切にプライベートにする (C-STRUCT-PRIVATE)
 
-Making a field public is a strong commitment: it pins down a representation
-choice, _and_ prevents the type from providing any validation or maintaining any
-invariants on the contents of the field, since clients can mutate it arbitrarily.
+構造体のフィールドをパブリックにすることには重大な責任が伴います。
+表現を変更することはできなくなり、またユーザはフィールドを自由に弄ることができるため
+値のバリデーションや不変条件の検証などができなくなります。
 
-Public fields are most appropriate for `struct` types in the C spirit: compound,
-passive data structures. Otherwise, consider providing getter/setter methods and
-hiding fields instead.
+パブリックなフィールドはC言語的な意味あいの`sturct`、すなわち複合化された受け身のデータ構造には最適ですが、
+それ以外ではgetter/setterメソッドを用意しフィールドを隠蔽することを考慮してください。
 
 
 <a id="c-newtype-hide"></a>
-## Newtypes encapsulate implementation details (C-NEWTYPE-HIDE)
+## newtypeを用いて実装詳細を隠蔽している (C-NEWTYPE-HIDE)
 
-A newtype can be used to hide representation details while making precise
-promises to the client.
+newtypeはユーザへの保証を保ちつつ実装詳細を隠蔽するために役立ちます。
 
-For example, consider a function `my_transform` that returns a compound iterator
-type.
+例としてこの、イテレータ型を返す`my_transform`関数を見てください。
 
 ```rust
 use std::iter::{Enumerate, Skip};
@@ -81,9 +76,8 @@ pub fn my_transform<I: Iterator>(input: I) -> Enumerate<Skip<I>> {
 }
 ```
 
-We wish to hide this type from the client, so that the client's view of the
-return type is roughly `Iterator<Item = (usize, T)>`. We can do so using the
-newtype pattern:
+ユーザから見た際に`Iterator<Item = (usize, T)>`のように見えるよう型を隠したいときは、
+newtype型を使うことができます。
 
 ```rust
 use std::iter::{Enumerate, Skip};
@@ -103,13 +97,11 @@ pub fn my_transform<I: Iterator>(input: I) -> MyTransformResult<I> {
 }
 ```
 
-Aside from simplifying the signature, this use of newtypes allows us to promise
-less to the client. The client does not know _how_ the result iterator is
-constructed or represented, which means the representation can change in the
-future without breaking client code.
+これにより宣言が簡単になるだけでなく、ユーザへの保証を小さくすることができます。
+ユーザは返されたイテレータがどのように生成されたのか、どのような内部表現になっているのかを知ることができません。
+したがって、ユーザのコードを壊すこと無く将来的に内部表現を変更できるようになります。
 
-In the future the same thing can be accomplished more concisely with the [`impl
-Trait`] feature but this is currently unstable.
+[`impl Trait`]は現在のところunstableですが、将来的にはこれを用いても同じことが達成できるようになります。
 
 [`impl Trait`]: https://github.com/rust-lang/rfcs/blob/master/text/1522-conservative-impl-trait.md
 
@@ -123,43 +115,41 @@ pub fn my_transform<I: Iterator>(input: I) -> impl Iterator<Item = (usize, I::It
 
 
 <a id="c-struct-bounds"></a>
-## Data structures do not duplicate derived trait bounds (C-STRUCT-BOUNDS)
+## データ構造にderiveしたトレイトの境界を定義で繰り返さない (C-STRUCT-BOUNDS)
 
-Generic data structures should not use trait bounds that can be derived or don't
-otherwise add semantic value. Each trait in the `derive` attribute will be
-expanded into a separate `impl` block that only applies to generic arguments
-that implement that trait.
+ジェネリックなデータ構造はderiveしたトレイト境界をその定義において繰り返すべきではありません。
+`derive`属性によって実装されたトレイトは、ジェネリック型がそのトレイトを実装している場合のみ実装される
+個別の`impl`ブロックに展開されます。
 
 ```rust
-// Prefer this:
+// 良い例:
 #[derive(Clone, Debug, PartialEq)]
 struct Good<T> { /* ... */ }
 
-// Over this:
+// 悪い例:
 #[derive(Clone, Debug, PartialEq)]
 struct Bad<T: Clone + Debug + PartialEq> { /* ... */ }
 ```
 
-Duplicating derived traits as bounds on `Bad` is unnecessary and a
-backwards-compatibiliity hazard. To illustrate this point, consider deriving
-`PartialOrd` on the structures in the previous example:
+`Bad`のようにderiveしたトレイトを境界として繰り返すのは不要であり、
+しかも後方互換性を保つ上で困難となります。
+なぜなら、ここで`PartialOrd`をderiveした場合を考えてみて下さい。
 
 ```rust
-// Non-breaking change:
+// 非破壊的変更:
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 struct Good<T> { /* ... */ }
 
-// Breaking change:
+// 破壊的変更:
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 struct Bad<T: Clone + Debug + PartialEq + PartialOrd> { /* ... */ }
 ```
 
-Generally speaking, adding a trait bound to a data structure is a breaking
-change because every consumer of that structure will need to start satisfying
-the additional bound. Deriving more traits from the standard library using the
-`derive` attribute is not a breaking change.
+一般的に、データ構造にトレイト境界を追加すると全ての利用箇所において追加の境界を満たす必要が発生するため、
+破壊的変更となります。
+しかし、`derive`属性を用いて標準ライブラリのトレイトを実装することは破壊的変更となりません。
 
-The following traits should always be avoided in bounds on data structures:
+以下のトレイトはデータ構造において境界とするべきではありません。
 
 - `Clone`
 - `PartialEq`
@@ -171,27 +161,25 @@ The following traits should always be avoided in bounds on data structures:
 - `Deserialize`
 - `DeserializeOwned`
 
-There's a grey area around other non-derivable trait bounds that aren't strictly
-required by the structure definition, like `Read` or `Write`. They may
-communicate the intented behaviour of the type better in its definition but also
-limits future extensibility. Including semantically useful trait bounds on data
-structures is still less problematic than including derivable traits as bounds.
+`Read`や`Write`のようなderiveできないトレイトの中には、
+厳密にはデータ構造によって要求されないグレーゾーンのものが存在します。
+これらは型のふるまいを伝える役に立つ可能性がありますが、一方で将来的な拡張性の障害にもなります。
+しかし、deriveできるトレイトを境界に追加するよりは問題が少ないでしょう。
 
-### Exceptions
+### 例外
 
-There are three exceptions where trait bounds on structures are required:
+データ構造にトレイト境界が必要となる、3つの例外があります。
 
-1. The data structure refers to an associated type on the trait.
-1. The bound is `?Sized`.
-1. The data structure has a `Drop` impl that requires trait bounds.
-Rust currently requires all trait bounds on the `Drop` impl are also present
-on the data structure.
+1. データ構造がトレイトの関連型を参照している。
+1. `?Sized`境界。
+1. データ構造がそのトレイト境界を必要とする`Drop`実装を持っている。Rustは現在、
+`Drop`実装の境界がデータ構造自身にもすることを要求します。
 
-### Examples from the standard library
+### 標準ライブラリでの例
 
-- [`std::borrow::Cow`] refers to an associated type on the `Borrow` trait.
-- [`std::boxed::Box`] opts out of the implicit `Sized` bound.
-- [`std::io::BufWriter`] requires a trait bound in its `Drop` impl.
+- [`std::borrow::Cow`]は`Borrow`トレイトの関連型を参照しています。
+- [`std::boxed::Box`]は暗黙の`Sized`境界を除いています。
+- [`std::io::BufWriter`]は`Drop`実装に必要である境界を型に要求します。
 
 [`std::borrow::Cow`]: https://doc.rust-lang.org/std/borrow/enum.Cow.html
 [`std::boxed::Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html

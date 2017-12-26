@@ -1,17 +1,16 @@
-# Debuggability
+# デバッガビリティ
 
 
 <a id="c-debug"></a>
-## All public types implement `Debug` (C-DEBUG)
+## 全てのパブリックな型に`Debug`を実装する (C-DEBUG)
 
-If there are exceptions, they are rare.
+例外が必要なことは稀なはずです。
 
 
 <a id="c-debug-nonempty"></a>
-## `Debug` representation is never empty (C-DEBUG-NONEMPTY)
+## `Debug`表現を空にしない (C-DEBUG-NONEMPTY)
 
-Even for conceptually empty values, the `Debug` representation should never be
-empty.
+`Debug`表現は空にするべきではありません。概念的に空である値に対しても同様です。
 
 ```rust
 let empty_str = "";

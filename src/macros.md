@@ -1,49 +1,47 @@
-# Macros
+# マクロ
 
 
 <a id="c-evocative"></a>
-## Input syntax is evocative of the output (C-EVOCATIVE)
+## 入力の構文から結果をイメージできるようになっている (C-EVOCATIVE)
 
-Rust macros let you dream up practically whatever input syntax you want. Aim to
-keep input syntax familiar and cohesive with the rest of your users' code by
-mirroring existing Rust syntax where possible. Pay attention to the choice and
-placement of keywords and punctuation.
+Rustのマクロの入力ではお好きな構文を実装することができますが、
+特異なシンタックスを導入するのではなく、
+Rustの構文に似せることでマクロ以外のコードとの統一性を保てるようにしてください。
+キーワードや記号類の選択・配置には注意してください。
 
-A good guide is to use syntax, especially keywords and punctuation, that is
-similar to what will be produced in the output of the macro.
+良い指針は、マクロの出力に似せた構文(特にキーワードと記号類)を使用することです。
 
-For example if your macro declares a struct with a particular name given in the
-input, preface the name with the keyword `struct` to signal to readers that a
-struct is being declared with the given name.
+例えば、マクロが与えられた名前の構造体型を宣言するならば、
+マクロの入力において名前の前にキーワード`struct`を付けさせるようにし、
+コードを読む人に対して構造体型が宣言されるということを知らせてください。
 
 ```rust
-// Prefer this...
+// このようにしてください...
 bitflags! {
     struct S: u32 { /* ... */ }
 }
 
-// ...over no keyword...
+// ...キーワードがなかったり...
 bitflags! {
     S: u32 { /* ... */ }
 }
 
-// ...or some ad-hoc word.
+// ...その場その場で勝手な単語を導入したりしないでください
 bitflags! {
     flags S: u32 { /* ... */ }
 }
 ```
 
-Another example is semicolons vs commas. Constants in Rust are followed by
-semicolons so if your macro declares a chain of constants, they should likely be
-followed by semicolons even if the syntax is otherwise slightly different from
-Rust's.
+もう一つの例はセミコロンとコンマの問題です。
+Rustにおける定数の宣言では、最後にセミコロンを付けます。
+複数の定数を宣言するマクロの場合、Rustの構文と違っているとしても同様にセミコロンを付けるようにすべきでしょう。
 
 ```rust
-// Ordinary constants use semicolons.
+// 普通の定数の宣言にはセミコロンが使われます
 const A: u32 = 0b000001;
 const B: u32 = 0b000010;
 
-// So prefer this...
+// なので、こうすべきです...
 bitflags! {
     struct S: u32 {
         const C = 0b000100;
@@ -51,7 +49,7 @@ bitflags! {
     }
 }
 
-// ...over this.
+// ...こうではなく
 bitflags! {
     struct S: u32 {
         const E = 0b010000,
@@ -60,16 +58,15 @@ bitflags! {
 }
 ```
 
-Macros are so diverse that these specific examples won't be relevant, but think
-about how to apply the same principles to your situation.
+マクロには幅広い用例があるため、こういった特定の例はそのまま通用しないでしょう。
+ですが、同じような考え方を適用できないか考えてみて下さい。
 
 
 <a id="c-macro-attr"></a>
-## Item macros compose well with attributes (C-MACRO-ATTR)
+## アイテムを宣言するマクロが属性と衝突しない (C-MACRO-ATTR)
 
-Macros that produce more than one output item should support adding attributes
-to any one of those items. One common use case would be putting individual items
-behind a cfg.
+アイテムを宣言するマクロは、それぞれに属性を付与できるようになっているべきです。
+よくある例は特定のアイテムをcfgで条件コンパイルするような場合です。
 
 ```rust
 bitflags! {
@@ -82,8 +79,7 @@ bitflags! {
 }
 ```
 
-Macros that produce a struct or enum as output should support attributes so that
-the output can be used with derive.
+構造体型や列挙型を生成するマクロも、deriveを使えるように属性をサポートすべきです。
 
 ```rust
 bitflags! {
@@ -97,12 +93,11 @@ bitflags! {
 
 
 <a id="c-anywhere"></a>
-## Item macros work anywhere that items are allowed (C-ANYWHERE)
+## アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える (C-ANYWHERE)
 
-Rust allows items to be placed at the module level or within a tighter scope
-like a function. Item macros should work equally well as ordinary items in all
-of these places. The test suite should include invocations of the macro in at
-least the module scope and function scope.
+Rustではアイテムをモジュールレベルから関数のような狭いスコープまで配置することができます。
+アイテムを宣言するマクロも同様に、いずれの場所でも動くようになっているべきです。
+そして、少なくともモジュールレベルおよび関数レベルでマクロを呼び出すテストを追加すべきです。
 
 ```rust
 #[cfg(test)]
@@ -116,8 +111,7 @@ mod tests {
 }
 ```
 
-As a simple example of how things can go wrong, this macro works great in a
-module scope but fails in a function scope.
+モジュールスコープでは動くものの、関数スコープでは動かないマクロの簡単な例を挙げます。
 
 ```rust
 macro_rules! broken {
@@ -129,19 +123,19 @@ macro_rules! broken {
     }
 }
 
-broken!(m::T); // okay, expands to T and m::T
+broken!(m::T); // 問題なくTおよびm::Tに展開される
 
 fn g() {
-    broken!(m::U); // fails to compile, super::U refers to the containing module not g
+    broken!(m::U); // コンパイルに失敗する、super::Uがgではなく外側のモジュールの方を指すため
 }
 ```
 
 
 <a id="c-macro-vis"></a>
-## Item macros support visibility specifiers (C-MACRO-VIS)
+## アイテムを宣言するマクロが可視性の指定をサポートしている (C-MACRO-VIS)
 
-Follow Rust syntax for visibility of items produced by a macro. Private by
-default, public if `pub` is specified.
+マクロによって宣言されるアイテムの可視性は、Rustの可視性の構文に沿ってください。
+デフォルトではプライベートで、`pub`が指定されたらパブリックにします。
 
 ```rust
 bitflags! {
@@ -161,19 +155,19 @@ bitflags! {
 
 
 <a id="c-macro-ty"></a>
-## Type fragments are flexible (C-MACRO-TY)
+## 型の指定が柔軟である (C-MACRO-TY)
 
-If your macro accepts a type fragment like `$t:ty` in the input, it should be
-usable with all of the following:
+マクロが`$t:ty`のようにして型を受け取る場合、
+以下の全てに対応できるべきです。
 
-- Primitives: `u8`, `&str`
-- Relative paths: `m::Data`
-- Absolute paths: `::base::Data`
-- Upward relative paths: `super::Data`
-- Generics: `Vec<String>`
+- プリミティブ型: `u8`, `&str`
+- 相対パス: `m::Data`
+- 絶対パス: `::base::Data`
+- 上位を参照する相対パス: `super::Data`
+- ジェネリクス: `Vec<String>`
 
-As a simple example of how things can go wrong, this macro works great with
-primitives and absolute paths but fails with relative paths.
+これができないマクロの簡単な例を挙げます。
+次のマクロはプリミティブ型や絶対パスではうまく動きますが、相対パスでは動きません。
 
 ```rust
 macro_rules! broken {

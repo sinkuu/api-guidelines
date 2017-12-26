@@ -1,34 +1,34 @@
-# Documentation
+# ドキュメンテーション
 
 
 <a id="c-crate-doc"></a>
-## Crate level docs are thorough and include examples (C-CRATE-DOC)
+## クレートレベルにコード例付きの詳細なドキュメントがある (C-CRATE-DOC)
 
-See [RFC 1687].
+[RFC 1687]を参照してください。
 
 [RFC 1687]: https://github.com/rust-lang/rfcs/pull/1687
 
 
 <a id="c-example"></a>
-## All items have a rustdoc example (C-EXAMPLE)
+## 全てのアイテムにコード例が付いている (C-EXAMPLE)
 
-Every public module, trait, struct, enum, function, method, macro, and type
-definition should have an example that exercises the functionality.
+全てのパブリックなモジュール、トレイト、構造体型、列挙型、関数、メソッド、マクロ、
+およびtypeエイリアスに、その機能を示すコード例を含むrustdocドキュメントが存在するべきです。
 
-This guideline should be applied within reason.
+この指針は無理のない範囲で適用してください。
 
-A link to an applicable example on another item may be sufficient. For example
-if exactly one function uses a particular type, it may be appropriate to write a
-single example on either the function or the type and link to it from the other.
+適用可能な、その他のアイテムにおけるコード例へのリンクでも十分でしょう。
+例えば、ある関数がある型を使うとして、
+コード例が関数と型のどちらか一方にあれば、もう一方からはリンクするだけで十分です。
 
-The purpose of an example is not always to show *how to use* the item. Readers
-can be expected to understand how to invoke functions, match on enums, and other
-fundamental tasks. Rather, an example is often intended to show *why someone
-would want to use* the item.
+コード例の目的が*どのように*そのアイテムを使うかを示すことであるとは限りません。
+読者は関数の呼び出し方、列挙型に対するmatchの使い方といった基本的な事柄は理解していると期待できます。
+ですから、コード例の目的は*なぜ*アイテムを使うべきかの提示であることも多くあります。
 
 ```rust
-// This would be a poor example of using clone(). It mechanically shows *how* to
-// call clone(), but does nothing to show *why* somebody would want this.
+// これはclone()を使うコード例の不味い例です。
+// *どう*clone()を呼ぶのか機械的に示しているだけであり、
+// *なぜ*これを使うべきかがまったく示されていません。
 fn main() {
     let hello = "hello";
 
@@ -38,14 +38,14 @@ fn main() {
 
 
 <a id="c-question-mark"></a>
-## Examples use `?`, not `try!`, not `unwrap` (C-QUESTION-MARK)
+## コード例が`try!`や`unwrap`ではなく`?`を使っている (C-QUESTION-MARK)
 
-Like it or not, example code is often copied verbatim by users. Unwrapping an
-error should be a conscious decision that the user needs to make.
+ユーザがコード例を丸写しすることは、その良し悪しは別としてよくあることです。
+そして、エラーをunwrapするか否かという判断はユーザが自覚的に判断すべきことです。
 
-A common way of structuring fallible example code is the following. The lines
-beginning with `#` are compiled by `cargo test` when building the example but
-will not appear in user-visible rustdoc.
+エラー処理を含むコード例を構成する一般的な方法を以下に示します。
+`#`で始まる行は`cargo test`によってコンパイルされますが、
+ユーザに見えるrustdocには表示されません。
 
 ```
 /// ```rust
@@ -67,14 +67,14 @@ will not appear in user-visible rustdoc.
 
 
 <a id="c-failure"></a>
-## Function docs include error, panic, and safety considerations (C-FAILURE)
+## 関数のドキュメントにエラー、パニック、安全性に関する事項が含まれている (C-FAILURE)
 
-Error conditions should be documented in an "Errors" section. This applies to
-trait methods as well -- trait methods for which the implementation is allowed
-or expected to return an error should be documented with an "Errors" section.
+エラーとなる条件を"Errors"セクションに記載するべきです。
+これはトレイトメソッドに対しても同様です。エラーを返す可能性のあるトレイトメソッドには
+"Errors"セクションを含んだドキュメントを付けるべきです。
 
-For example in the standard library, Some implementations of the
-[`std::io::Read::read`] trait method may return an error.
+標準ライブラリの例を挙げると、トレイトメソッド[`std::io::Read::read`]の実装のいくつかは
+エラーを返す可能性があります。
 
 [`std::io::Read::read`]: https://doc.rust-lang.org/std/io/trait.Read.html#tymethod.read
 
@@ -91,11 +91,11 @@ For example in the standard library, Some implementations of the
 /// guaranteed that no bytes were read.
 ```
 
-Panic conditions should be documented in a "Panics" section. This applies to
-trait methods as well -- traits methods for which the implementation is allowed
-or expected to panic should be documented with a "Panics" section.
+また、パニックを起こす条件を"Panics"セクションに記載するべきです。
+これはトレイトメソッドに対しても同様です。パニックを起こす可能性のあるトレイトメソッドには
+"Panics"セクションを含んだドキュメントを付けるべきです。
 
-In the standard library the [`Vec::insert`] method may panic.
+標準ライブラリを例にすると、パニックを起こす可能性のあるメソッドとして[`Vec::insert`]が挙げられます。
 
 [`Vec::insert`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert
 
@@ -108,10 +108,10 @@ In the standard library the [`Vec::insert`] method may panic.
 /// Panics if `index` is out of bounds.
 ```
 
-It is not necessary to document all conceivable panic cases, especially if the
-panic occurs in logic provided by the caller. For example documenting the
-`Display` panic in the following code seems excessive. But when in doubt, err on
-the side of documenting more panic cases.
+あらゆるパニックの可能性を網羅する必要はありません。
+特に、呼び出し側の提供したロジックの内部でパニックが起こる場合、
+例えば以下のような事例で`Display`のパニックをドキュメントに記載するのは過剰です。
+ですが、微妙なケースではできる限り多くの可能性を網羅する方が良いでしょう。
 
 ```rust
 /// # Panics
@@ -122,11 +122,11 @@ pub fn print<T: Display>(t: T) {
 }
 ```
 
-Unsafe functions should be documented with a "Safety" section that explains all
-invariants that the caller is responsible for upholding to use the function
-correctly.
+unsafeな関数のドキュメントには、
+その関数を正しく使うために呼び出し側が守らなければならない不変条件を記載した
+"Safety"セクションを含めてください。
 
-The unsafe [`std::ptr::read`] requires the following of the caller.
+例えば、unsafeな関数である[`std::ptr::read`]は以下の事項を呼び出し側に要求しています。
 
 [`std::ptr::read`]: https://doc.rust-lang.org/std/ptr/fn.read.html
 
@@ -148,38 +148,36 @@ The unsafe [`std::ptr::read`] requires the following of the caller.
 
 
 <a id="c-link"></a>
-## Prose contains hyperlinks to relevant things (C-LINK)
+## 文章に関係する項目へのリンクを含める (C-LINK)
 
-Links to methods within the same type usually look like this:
+同じ型の別のメソッドへのリンクはふつう次のようになります。
 
 ```md
 [`serialize_struct`]: #method.serialize_struct
 ```
 
-Links to other types usually look like this:
+別の型へのリンクはこうなります。
 
 ```md
 [`Deserialize`]: trait.Deserialize.html
 ```
 
-Links may also point to a parent or child module:
+親・子モジュールへのリンクは次のようにします。
 
 ```md
 [`Value`]: ../enum.Value.html
 [`DeserializeOwned`]: de/trait.DeserializeOwned.html
 ```
 
-This guideline is officially recommended by RFC 1574 under the heading ["Link
-all the things"].
+この指針はRFC 1574の["Link all the things"]によって公式に推奨されています。
 
 ["Link all the things"]: https://github.com/rust-lang/rfcs/blob/master/text/1574-more-api-documentation-conventions.md#link-all-the-things
 
 
 <a id="c-metadata"></a>
-## Cargo.toml includes all common metadata (C-METADATA)
+## Cargo.tomlが一般的なメタデータを全て含んでいる (C-METADATA)
 
-The `[package]` section of `Cargo.toml` should include the following
-values:
+`Cargo.toml`の`[package]`セクションは以下の値を含むべきです。
 
 - `authors`
 - `description`
@@ -189,26 +187,24 @@ values:
 - `keywords`
 - `categories`
 
-In addition, there are two optional metadata fields:
+加えて、2つの任意項目があります。
 
 - `documentation`
 - `homepage`
 
-By default, *crates.io* links to documentation for the crate on [*docs.rs*]. The
-`documentation` metadata only needs to be set if the documentation is hosted
-somewhere other than *docs.rs*, for example because the crate links against a
-shared library that is not available in the build environment of *docs.rs*.
+デフォルトで、*crates.io*は[*docs.rs*]上のドキュメントへリンクします。
+`documentation`メタデータは*docs.rs*以外の場所でドキュメントをホストしている場合にのみ必要です。
+例えば、そのクレートが*docs.rs*のビルド環境に存在しない共有ライブラリを要求している場合などです。
 
 [*docs.rs*]: https://docs.rs
 
-The `homepage` metadata should only be set if there is a unique website for the
-crate other than the source repository or API documentation. Do not make
-`homepage` redundant with either the `documentation` or `repository` values. For
-example, serde sets `homepage` to *https://serde.rs*, a dedicated website.
+`homepage`メタデータはソースレポジトリやAPIドキュメント以外の独自のウェブサイトがある場合のみ
+使用されるべきです。`documentation`や`repository`と重複した値を入れないでください。
+例えば、Serdeは`homepage`を専用のウェブサイトである*https://serde.rs*に設定しています。
 
 [C-HTML-ROOT]: #c-html-root
 <a id="c-html-root"></a>
-### Crate sets html_root_url attribute (C-HTML-ROOT)
+### html_root_url属性が設定されている (C-HTML-ROOT)
 
 <!--
 Remove this guideline once rustdoc links no-deps documentation with no
@@ -216,55 +212,45 @@ html_root_url to docs.rs by default.
 https://github.com/rust-lang/rust/issues/42301
 -->
 
-It should point to `"https://docs.rs/CRATE/MAJOR.MINOR.PATCH"`,
-assuming the crate uses docs.rs for its primary API documentation.
+docs.rsを主なAPIドキュメントとして使っているならば`"https://docs.rs/CRATE/MAJOR.MINOR.PATCH"`に設定してください。
 
-The `html_root_url` attribute tells rustdoc how to create URLs to
-items in the crate when compiling downstream crates. Without it, links
-in the documentation of crates that depend on your crate will be
-incorrect.
+`html_root_url`属性は、rustdocが下流クレートをコンパイルする際にどのようにURLを作成するべきかを伝えるものです。
+これが無ければ、あなたのクレートに依存するクレートにおいて、ドキュメント中のリンクが間違ったものになります。
 
 ```rust
 #![doc(html_root_url = "https://docs.rs/log/0.3.8")]
 ```
 
-Because this URL contains an exact version number, it must be kept in
-sync with the version number in `Cargo.toml`. The [`version-sync`]
-crate can help with this by letting you add an integration test that
-fails if the `html_root_url` version number is out of sync with the
-crate version.
+バージョンがURLに含まれていることから分かる通り、
+`Cargo.toml`内のバージョン番号と同期させる必要があります。
+`html_root_url`がクレートのバージョンとずれた場合に失敗するインテグレーションテストを追加する
+[`version-sync`]クレートが役に立つはずです。
 
 [`version-sync`]: https://crates.io/crates/version-sync
 
-If you do not like that mechanism, it is recommended to add a comment
-to the `Cargo.toml` version key reminding yourself to keep the two
-updated together, like:
+この方式が気に入らなければ、`Cargo.toml`のバージョンの所にメモ書きを残しておくとよいでしょう。
 
 ```toml
-version = "0.3.8" # remember to update html_root_url
+version = "0.3.8" # html_root_urlの更新 忘れない
 ```
 
-For documentation hosted outside of docs.rs, the value for `html_root_url` is
-correct if appending the crate name + index.html takes you to the documentation
-of the crate's root module. For example if the documentation of the root module
-is located at `"https://api.rocket.rs/rocket/index.html"` then the
-`html_root_url` would be `"https://api.rocket.rs"`.
+docs.rs以外にドキュメントをホストしているなら、`html_root_url`の値にクレート名 + index.htmlを付け足すと
+あなたのクレートのルートモジュールにたどり着けるように設定してください。
+例えば、ルートモジュールが`"https://api.rocket.rs/rocket/index.html"`にあるならば、
+`html_root_url`は`"https://api.rocket.rs"`とすべきです。
 
 
 <a id="c-relnotes"></a>
-## Release notes document all significant changes (C-RELNOTES)
+## 大きな変更が全てリリースノートに記載されている (C-RELNOTES)
 
-Users of the crate can read the release notes to find a summary of what
-changed in each published release of the crate. A link to the release notes,
-or the notes themselves, should be included in the crate-level documentation
-and/or the repository linked in Cargo.toml.
+クレートのユーザはリリースノートを読むことでバージョン間の変更点を知ることができます。
+クレートレベルのドキュメントまたはCargo.tomlからリンクされたリポジトリにリリースノートへのリンクを置いてください。
 
-Breaking changes (as defined in [RFC 1105]) should be clearly identified in the
-release notes.
+破壊的変更([RFC 1105]で定義されている)は明確に区別されているべきです。
 
-If using Git to track the source of a crate, every release published to
-*crates.io* should have a corresponding tag identifying the commit that was
-published. A similar process should be used for non-Git VCS tools as well.
+Gitを用いてソースコードの履歴を管理しているなら、
+*crates.io*に発行された全てのリリースは対応するコミットにタグを付けてください。
+Git以外のVCSでも同様の処理をしておくべきです。
 
 ```bash
 # Tag the current commit
@@ -272,12 +258,12 @@ GIT_COMMITTER_DATE=$(git log -n1 --pretty=%aD) git tag -a -m "Release 0.3.0" 0.3
 git push --tags
 ```
 
-Annotated tags are preferred because some Git commands ignore unannotated tags
-if any annotated tags exist.
+アノテーション付きタグが一つでも存在するとアノテーションのないタグを無視するGitコマンドがあるため、
+アノテーション付きタグの使用が推奨されます。
 
 [RFC 1105]: https://github.com/rust-lang/rfcs/blob/master/text/1105-api-evolution.md
 
-### Examples
+### 例
 
 - [Serde 1.0.0 release notes](https://github.com/serde-rs/serde/releases/tag/v1.0.0)
 - [Serde 0.9.8 release notes](https://github.com/serde-rs/serde/releases/tag/v0.9.8)
@@ -286,17 +272,18 @@ if any annotated tags exist.
 
 
 <a id="c-hidden"></a>
-## Rustdoc does not show unhelpful implementation details (C-HIDDEN)
+## 無用な実装詳細がRustdocに表示されていない (C-HIDDEN)
 
-Rustdoc is supposed to include everything users need to use the crate fully and
-nothing more. It is fine to explain relevant implementation details in prose but
-they should not be real entries in the documentation.
+Rustdocはユーザがそのクレートを使用するのに必要な情報を網羅すべきですが、
+それ以上の内容は含むべきではありません。
+文章中で関係のある実装詳細を解説するのはよいですが、
+実際にドキュメント項目として現れてはいけません。
 
-Especially be selective about which impls are visible in rustdoc -- all the ones
-that users would need for using the crate fully, but no others. In the following
-code the rustdoc of `PublicError` by default would show the `From<PrivateError>`
-impl. We choose to hide it with `#[doc(hidden)]` because users can never have a
-`PrivateError` in their code so this impl would never be relevant to them.
+特に、どのようなimplがドキュメントに表示されるかに関しては精選するようにしてください。
+ユーザがクレートを使用するのに必要なものだけ示し、それ以外は隠しましょう。
+以下のコードでは、`PublicError`のドキュメントに`From<PrivateError>`が表示されてしまいます。
+ユーザが`PrivateError`型を扱うことはないため、この項目はユーザにとっては関係ないものです。
+なので、`#[doc(hidden)]`を使って隠します。
 
 ```rust
 // This error type is returned to users.
@@ -314,8 +301,7 @@ impl From<PrivateError> for PublicError {
 }
 ```
 
-[`pub(crate)`] is another great tool for removing implementation details from
-the public API. It allows items to be used from outside of their own module but
-not outside of the same crate.
+[`pub(crate)`]も実装詳細をパブリックなAPIから隠す便利なツールです。
+同じモジュール以外からもアイテムを使えるようになりますが、他のクレートからは見えません。
 
 [`pub(crate)`]: https://github.com/rust-lang/rfcs/blob/master/text/1422-pub-restricted.md
