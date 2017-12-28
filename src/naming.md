@@ -19,14 +19,14 @@ Rustは「型レベル」のもの(型やトレイト)に`CamelCase`、
 | Enumのバリアント | `CamelCase` |
 | 関数 | `snake_case` |
 | メソッド | `snake_case` |
-| 一般のコンストラクタ | `new` or `with_more_details` |
+| 一般のコンストラクタ | `new` または `with_more_details` |
 | 変換を行うコンストラクタ | `from_some_other_type` |
 | マクロ | `snake_case!` |
 | ローカル変数 | `snake_case` |
 | スタティック変数 | `SCREAMING_SNAKE_CASE` |
 | 定数 | `SCREAMING_SNAKE_CASE` |
-| 型パラメータ | concise `CamelCase`, usually single uppercase letter: `T` |
-| ライフタイム | short `lowercase`, usually a single letter: `'a`, `'de`, `'src` |
+| 型パラメータ | 簡潔な`CamelCase`、大抵は大文字で1文字: `T` |
+| ライフタイム | 短い`lowercase`、大抵は1文字: `'a`, `'de`, `'src` |
 | Feature | [不明](https://github.com/rust-lang-nursery/api-guidelines/issues/101)、ただし[C-FEATURE]を参照 |
 
 頭字語や複合語は、`CamelCase`では一語に数えます。例えば`UUID`ではなく`Uuid`を使い、`USize`ではなく`Usize`、`StdIn`ではなく`Stdin`を使って下さい。
