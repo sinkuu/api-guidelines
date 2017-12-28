@@ -1,0 +1,319 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>マクロ - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html" class="active"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="macros.html#マクロ" id="マクロ"><h1>マクロ</h1></a>
+<p><a id="c-evocative"></a></p>
+<a class="header" href="macros.html#入力の構文から結果をイメージできるようになっている-c-evocative" id="入力の構文から結果をイメージできるようになっている-c-evocative"><h2>入力の構文から結果をイメージできるようになっている (C-EVOCATIVE)</h2></a>
+<p>Rustのマクロの入力ではお好きな構文を実装することができますが、
+特異なシンタックスを導入するのではなく、
+Rustの構文に似せることでマクロ以外のコードとの統一性を保てるようにしてください。
+キーワードや記号類の選択・配置には注意してください。</p>
+<p>良い指針は、マクロの出力に似せた構文(特にキーワードと記号類)を使用することです。</p>
+<p>例えば、マクロが与えられた名前の構造体型を宣言するならば、
+マクロの入力において名前の前にキーワード<code>struct</code>を付けさせるようにし、
+コードを読む人に対して構造体型が宣言されるということを知らせてください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// このようにしてください...
+bitflags! {
+    struct S: u32 { /* ... */ }
+}
+
+// ...キーワードがなかったり...
+bitflags! {
+    S: u32 { /* ... */ }
+}
+
+// ...その場その場で勝手な単語を導入したりしないでください
+bitflags! {
+    flags S: u32 { /* ... */ }
+}
+#}</code></pre></pre>
+<p>もう一つの例はセミコロンとコンマの問題です。
+Rustにおける定数の宣言では、最後にセミコロンを付けます。
+複数の定数を宣言するマクロの場合、Rustの構文と違っているとしても同様にセミコロンを付けるようにすべきでしょう。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 普通の定数の宣言にはセミコロンが使われます
+const A: u32 = 0b000001;
+const B: u32 = 0b000010;
+
+// なので、こうすべきです...
+bitflags! {
+    struct S: u32 {
+        const C = 0b000100;
+        const D = 0b001000;
+    }
+}
+
+// ...こうではなく
+bitflags! {
+    struct S: u32 {
+        const E = 0b010000,
+        const F = 0b100000,
+    }
+}
+#}</code></pre></pre>
+<p>マクロには幅広い用例があるため、こういった特定の例はそのまま通用しないでしょう。
+ですが、同じような考え方を適用できないか考えてみて下さい。</p>
+<p><a id="c-macro-attr"></a></p>
+<a class="header" href="macros.html#アイテムを宣言するマクロが属性と衝突しない-c-macro-attr" id="アイテムを宣言するマクロが属性と衝突しない-c-macro-attr"><h2>アイテムを宣言するマクロが属性と衝突しない (C-MACRO-ATTR)</h2></a>
+<p>アイテムを宣言するマクロは、それぞれに属性を付与できるようになっているべきです。
+よくある例は特定のアイテムをcfgで条件コンパイルするような場合です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+bitflags! {
+    struct Flags: u8 {
+        #[cfg(windows)]
+        const ControlCenter = 0b001;
+        #[cfg(unix)]
+        const Terminal = 0b010;
+    }
+}
+#}</code></pre></pre>
+<p>構造体型や列挙型を生成するマクロも、deriveを使えるように属性をサポートすべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+bitflags! {
+    #[derive(Default, Serialize)]
+    struct Flags: u8 {
+        const ControlCenter = 0b001;
+        const Terminal = 0b010;
+    }
+}
+#}</code></pre></pre>
+<p><a id="c-anywhere"></a></p>
+<a class="header" href="macros.html#アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える-c-anywhere" id="アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える-c-anywhere"><h2>アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える (C-ANYWHERE)</h2></a>
+<p>Rustではアイテムをモジュールレベルから関数のような狭いスコープまで配置することができます。
+アイテムを宣言するマクロも同様に、いずれの場所でも動くようになっているべきです。
+そして、少なくともモジュールレベルおよび関数レベルでマクロを呼び出すテストを追加すべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[cfg(test)]
+mod tests {
+    test_your_macro_in_a!(module);
+
+    #[test]
+    fn anywhere() {
+        test_your_macro_in_a!(function);
+    }
+}
+#}</code></pre></pre>
+<p>モジュールスコープでは動くものの、関数スコープでは動かないマクロの簡単な例を挙げます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+macro_rules! broken {
+    ($m:ident :: $t:ident) =&gt; {
+        pub struct $t;
+        pub mod $m {
+            pub use super::$t;
+        }
+    }
+}
+
+broken!(m::T); // 問題なくTおよびm::Tに展開される
+
+fn g() {
+    broken!(m::U); // コンパイルに失敗する、super::Uがgではなく外側のモジュールの方を指すため
+}
+#}</code></pre></pre>
+<p><a id="c-macro-vis"></a></p>
+<a class="header" href="macros.html#アイテムを宣言するマクロが可視性の指定をサポートしている-c-macro-vis" id="アイテムを宣言するマクロが可視性の指定をサポートしている-c-macro-vis"><h2>アイテムを宣言するマクロが可視性の指定をサポートしている (C-MACRO-VIS)</h2></a>
+<p>マクロによって宣言されるアイテムの可視性は、Rustの可視性の構文に沿ってください。
+デフォルトではプライベートで、<code>pub</code>が指定されたらパブリックにします。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+bitflags! {
+    struct PrivateFlags: u8 {
+        const A = 0b0001;
+        const B = 0b0010;
+    }
+}
+
+bitflags! {
+    pub struct PublicFlags: u8 {
+        const C = 0b0100;
+        const D = 0b1000;
+    }
+}
+#}</code></pre></pre>
+<p><a id="c-macro-ty"></a></p>
+<a class="header" href="macros.html#型の指定が柔軟である-c-macro-ty" id="型の指定が柔軟である-c-macro-ty"><h2>型の指定が柔軟である (C-MACRO-TY)</h2></a>
+<p>マクロが<code>$t:ty</code>のようにして型を受け取る場合、
+以下の全てに対応できるべきです。</p>
+<ul>
+<li>プリミティブ型: <code>u8</code>, <code>&amp;str</code></li>
+<li>相対パス: <code>m::Data</code></li>
+<li>絶対パス: <code>::base::Data</code></li>
+<li>上位を参照する相対パス: <code>super::Data</code></li>
+<li>ジェネリクス: <code>Vec&lt;String&gt;</code></li>
+</ul>
+<p>これができないマクロの簡単な例を挙げます。
+次のマクロはプリミティブ型や絶対パスではうまく動きますが、相対パスでは動きません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+macro_rules! broken {
+    ($m:ident =&gt; $t:ty) =&gt; {
+        pub mod $m {
+            pub struct Wrapper($t);
+        }
+    }
+}
+
+broken!(a =&gt; u8); // okay
+
+broken!(b =&gt; ::std::marker::PhantomData&lt;()&gt;); // okay
+
+struct S;
+broken!(c =&gt; S); // fails to compile
+#}</code></pre></pre>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="interoperability.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="documentation.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="interoperability.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="documentation.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

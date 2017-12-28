@@ -1,0 +1,320 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>柔軟性 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html" class="active"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="flexibility.html#柔軟性" id="柔軟性"><h1>柔軟性</h1></a>
+<p><a id="c-intermediate"></a></p>
+<a class="header" href="flexibility.html#重複した処理を行わなくて済むように中間生成物を公開している-c-intermediate" id="重複した処理を行わなくて済むように中間生成物を公開している-c-intermediate"><h2>重複した処理を行わなくて済むように中間生成物を公開している (C-INTERMEDIATE)</h2></a>
+<p>何らかの処理を行って結果を返す関数の多くは、関連したデータを途中で生成しています。
+もしユーザにとって有益なものがあれば、それを公開するAPIの追加を検討してください。</p>
+<a class="header" href="flexibility.html#標準ライブラリでの例" id="標準ライブラリでの例"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li>
+<p><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.binary_search"><code>Vec::binary_search</code></a>は目的の値が見つかったか否かを<code>bool</code>で表したり、
+目的の値が見つかった位置を<code>Option&lt;usize&gt;</code>で返すようにはなっていません。
+代わりに、もし見つかればその位置を、そして見つからなければその値が挿入されるべき位置を返します。</p>
+</li>
+<li>
+<p><a href="https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8"><code>String::from_utf8</code></a>は入力が正しいUTF-8でなければ失敗します。
+そのとき、入力のどこまでが正しいUTF-8であったかを返し、また入力されたバイト列の所有権も返します。</p>
+</li>
+<li>
+<p><a href="https://doc.rust-lang.org/stable/std/collections/struct.HashMap.html#method.insert"><code>HashMap::insert</code></a>はそのキーの場所に元から値が存在していたら、その値を<code>Option&lt;T&gt;</code>で返します。
+ユーザがこの値を必要としているとき、この挙動がなければハッシュテーブルへのルックアップを二度繰り返さなければなりません。</p>
+</li>
+</ul>
+<p><a id="c-caller-control"></a></p>
+<a class="header" href="flexibility.html#呼び出し側がデータをコピーするタイミングを決める-c-caller-control" id="呼び出し側がデータをコピーするタイミングを決める-c-caller-control"><h2>呼び出し側がデータをコピーするタイミングを決める (C-CALLER-CONTROL)</h2></a>
+<p>引数の所有権を要する関数は、借用して複製するのではなく所有権を受け取るべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 良い例:
+fn foo(b: Bar) {
+    /* use b as owned, directly */
+}
+
+// 悪い例:
+fn foo(b: &amp;Bar) {
+    let b = b.clone();
+    /* use b as owned after cloning */
+}
+#}</code></pre></pre>
+<p>もし関数が引数の所有権を必要としないのなら、
+所有権を取って最終的にdropする代わりに可変あるいは非可変借用を受け取るべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 良い例:
+fn foo(b: &amp;Bar) {
+    /* use b as borrowed */
+}
+
+// 悪い例:
+fn foo(b: Bar) {
+    /* use b as borrowed, it is implicitly dropped before function returns */
+}
+#}</code></pre></pre>
+<p><code>Copy</code>トレイトは本当に必要な場合のみ使用してください。
+単に低コストでコピーが可能であると伝えるために使用してはいけません。</p>
+<p><a id="c-generic"></a></p>
+<a class="header" href="flexibility.html#ジェネリクスを用いて関数の引数に対する制限を最小にしている-c-generic" id="ジェネリクスを用いて関数の引数に対する制限を最小にしている-c-generic"><h2>ジェネリクスを用いて関数の引数に対する制限を最小にしている (C-GENERIC)</h2></a>
+<p>関数の引数に対する制約が少ないほど、その関数は幅広く使えるようになります。</p>
+<p>単にイテレーションが必要なだけであれば、このようにジェネリクスを用いてください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo&lt;I: IntoIterator&lt;Item = i64&gt;&gt;(iter: I) { /* ... */ }
+#}</code></pre></pre>
+<p>特定の型を指定しないでください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo(c: &amp;[i64]) { /* ... */ }
+fn foo(c: &amp;Vec&lt;i64&gt;) { /* ... */ }
+fn foo(c: &amp;SomeOtherCollection&lt;i64&gt;) { /* ... */ }
+#}</code></pre></pre>
+<p>もっと言えば、ジェネリクスを用い、関数の引数に対して必要な制約を正確に示してください。</p>
+<a class="header" href="flexibility.html#ジェネリクスの利点" id="ジェネリクスの利点"><h3>ジェネリクスの利点</h3></a>
+<ul>
+<li>
+<p><em>再利用性</em>。ジェネリックな関数は受け取る型への明確な要件を示しつつ、
+多くの型に対して適用できます。</p>
+</li>
+<li>
+<p><em>スタティックディスパッチと最適化</em>。ジェネリック関数を呼び出すと特定の型に特殊化(&quot;monomorphized&quot;)されます。
+トレイトメソッドの呼び出しはスタティックかつ実装を直接呼び出す形に変換され、
+コンパイラは呼び出しをインライン化し最適化することが可能です。</p>
+</li>
+<li>
+<p><em>レイアウトのインライン化</em>。構造体型や列挙型がジェネリックな型<code>T</code>を持つとき、
+型<code>T</code>の値へは間接的なアクセスを挟むことなく、構造体型や列挙型の内部にインライン化されます。</p>
+</li>
+<li>
+<p><em>推論</em>。ジェネリック関数の型パラメータは大抵推論が可能であるため、
+明示的な変換やその他のメソッド呼び出しといったコード中の冗長な部分を削減することが可能です。</p>
+</li>
+<li>
+<p><em>正確な型</em>。ジェネリクスによって型に名前を与えられるため、
+正確にその型を受け取りあるいは生成する箇所を指定することができます。
+例えば、次の関数は全く同じ型<code>T</code>を受け取り、返すことが保証されます。
+<code>Trait</code>を実装する異なる型を用いて呼び出したりすることはできません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn binary&lt;T: Trait&gt;(x: T, y: T) -&gt; T
+#}</code></pre></pre>
+</li>
+</ul>
+<a class="header" href="flexibility.html#ジェネリクスの欠点" id="ジェネリクスの欠点"><h3>ジェネリクスの欠点</h3></a>
+<ul>
+<li>
+<p><em>コードサイズ</em>。ジェネリック関数の特殊化により、関数の中身は複製されます。
+コードサイズの増大がパフォーマンスと釣り合うかどうか検討するべきです。</p>
+</li>
+<li>
+<p><em>一様な型</em>。これは型が正確であることの裏返しです。型パラメータ<code>T</code>は一つの実際の型をもちます。
+例えば<code>Vec&lt;T&gt;</code>は単一の具体型のコレクションです(そして内部的にはメモリ上に隣り合って並べられます)。
+一様でないコレクションが有用な場合もあります。<a href="flexibility.html#c-object">trait objects</a>を参照してください。</p>
+</li>
+<li>
+<p><em>関数の定義の複雑化</em>。ジェネリクスを多用すると、関数の定義を読んだり理解することが難しくなります。</p>
+</li>
+</ul>
+<a class="header" href="flexibility.html#標準ライブラリの例" id="標準ライブラリの例"><h3>標準ライブラリの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/fs/struct.File.html#method.open"><code>std::fs::File::open</code></a>は<code>AsRef&lt;Path&gt;</code>というジェネリックな型を取ります。
+これにより、文字列リテラル<code>&quot;f.txt&quot;</code>や<a href="https://doc.rust-lang.org/std/path/struct.Path.html"><code>Path</code></a>、あるいは<a href="https://doc.rust-lang.org/std/ffi/struct.OsString.html"><code>OsString</code></a>などを渡して
+ファイルを開くことができます。</li>
+</ul>
+<p><a id="c-object"></a></p>
+<a class="header" href="flexibility.html#トレイトオブジェクトとして有用なトレイトがオブジェクトセーフになっている-c-object" id="トレイトオブジェクトとして有用なトレイトがオブジェクトセーフになっている-c-object"><h2>トレイトオブジェクトとして有用なトレイトがオブジェクトセーフになっている (C-OBJECT)</h2></a>
+<p>トレイトオブジェクトには大きな制約があります。それは、トレイトオブジェクト経由で呼ばれるメソッドは
+ジェネリクスを使用できず、また<code>Self</code>をレシーバ以外の引数で使用できないことです。</p>
+<p>トレイトを設計する際、そのトレイトがオブジェクトとして使用されるのか
+ジェネリクスの境界として使用されるのかを決めておく必要があります。</p>
+<p>そのトレイトがオブジェクトとして使用されることを念頭に置くならば、
+トレイトメソッドではジェネリクスの代わりにトレイトオブジェクトを使用すべきです。</p>
+<p><code>Self: Sized</code>という<code>where</code>節を用いることで、特定のメソッドをトレイトオブジェクトから除外することができます。
+次のトレイトはジェネリックなメソッドを持つためオブジェクトセーフではありません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+trait MyTrait {
+    fn object_safe(&amp;self, i: i32);
+
+    fn not_object_safe&lt;T&gt;(&amp;self, t: T);
+}
+#}</code></pre></pre>
+<p>ジェネリックなメソッドに<code>Self: Sized</code>を要求させることでトレイトオブジェクトから除外し、
+そのトレイトをオブジェクトセーフにすることが可能です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+trait MyTrait {
+    fn object_safe(&amp;self, i: i32);
+
+    fn not_object_safe&lt;T&gt;(&amp;self, t: T) where Self: Sized;
+}
+#}</code></pre></pre>
+<a class="header" href="flexibility.html#トレイトオブジェクトの利点" id="トレイトオブジェクトの利点"><h3>トレイトオブジェクトの利点</h3></a>
+<ul>
+<li><em>一様性</em>。これ無しでは解決できない問題もあります。</li>
+<li><em>コードサイズ</em>。ジェネリクスと異なり、トレイトオブジェクトは特殊化(monomorphized)されたコードを生成しないため、
+コードサイズを大幅に削減することができます。</li>
+</ul>
+<a class="header" href="flexibility.html#トレイトオブジェクトの欠点" id="トレイトオブジェクトの欠点"><h3>トレイトオブジェクトの欠点</h3></a>
+<ul>
+<li><em>ジェネリックなメソッドが使えない</em>。トレイトオブジェクトは今のところジェネリックなメソッドを
+持つことができません。</li>
+<li><em>動的ディスパッチとファットポインタ</em>。トレイトオブジェクトは、パフォーマンスに影響する可能性のある
+間接アクセスと仮想関数テーブルによるディスパッチを引き起こします。</li>
+<li><em>Selfが使えない</em>。メソッドのレシーバ引数を除いて<code>Self</code>型を取ることはできません。</li>
+</ul>
+<a class="header" href="flexibility.html#標準ライブラリでの例-1" id="標準ライブラリでの例-1"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/io/trait.Read.html"><code>io::Read</code></a>と<a href="https://doc.rust-lang.org/std/io/trait.Write.html"><code>io::Write</code></a>は頻繁にオブジェクトとして使われます。</li>
+<li><a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html"><code>Iterator</code></a>には、トレイトオブジェクトとして使用できるようにするため、
+<code>Self: Sized</code>が指定されたジェネリックなメソッドがあります。</li>
+</ul>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="predictability.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="type-safety.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="predictability.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="type-safety.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

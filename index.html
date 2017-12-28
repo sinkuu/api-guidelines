@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>概要 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html" class="active">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="about.html#rust-apiガイドライン-非公式日本語訳" id="rust-apiガイドライン-非公式日本語訳"><h1>Rust APIガイドライン (非公式日本語訳)</h1></a>
+<p>これはプログラミング言語RustのためのAPIデザイン上の推奨事項をまとめたものです。
+大部分は、Rustエコシステム内の標準・非標準ライブラリを構築してきた経験を元に、
+Rustのライブラリーチームによって執筆されました。</p>
+<p>これはあくまで指針です。
+項目ごとの充実度には差があり、今後の加筆修正が必要となっている曖昧な部分もあります。
+Rustのクレート開発者は、ここから使えそうな内容を選び取り、
+イディオマティックで相互運用性の高いライブラリを開発する上での重要な検討事項とするべきです。
+また、このガイドラインは義務的に従わなければならない基準とされるべきではなく、
+あくまで従わない場合に比べエコシステム内の他のクレートとのより良い相互運用が達成できるような
+物となっています。</p>
+<p>このブックは<a href="checklist.html">チェックリスト</a>と各項目の説明に分かれています。
+<a href="checklist.html">チェックリスト</a>は簡潔に全項目をまとめたものです。
+クレートのレビューを行う際に、ざっと目を通すのに使えます。
+残りそれぞれの項目に関して章分けし、詳しい説明を行っています。</p>
+<p>APIガイドラインへの貢献に興味がある場合、<a href="https://github.com/rust-lang-nursery/api-guidelines/blob/master/CONTRIBUTING.md">contributing.md</a>を参照し、
+<a href="https://gitter.im/rust-impl-period/WG-libs-guidelines">Gitterチャンネル</a>に参加してください。</p>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+
+                
+                    <a rel="next" href="checklist.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+
+            
+                <a href="checklist.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

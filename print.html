@@ -1,0 +1,2032 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="print.html#rust-apiガイドライン-非公式日本語訳" id="rust-apiガイドライン-非公式日本語訳"><h1>Rust APIガイドライン (非公式日本語訳)</h1></a>
+<p>これはプログラミング言語RustのためのAPIデザイン上の推奨事項をまとめたものです。
+大部分は、Rustエコシステム内の標準・非標準ライブラリを構築してきた経験を元に、
+Rustのライブラリーチームによって執筆されました。</p>
+<p>これはあくまで指針です。
+項目ごとの充実度には差があり、今後の加筆修正が必要となっている曖昧な部分もあります。
+Rustのクレート開発者は、ここから使えそうな内容を選び取り、
+イディオマティックで相互運用性の高いライブラリを開発する上での重要な検討事項とするべきです。
+また、このガイドラインは義務的に従わなければならない基準とされるべきではなく、
+あくまで従わない場合に比べエコシステム内の他のクレートとのより良い相互運用が達成できるような
+物となっています。</p>
+<p>このブックは<a href="checklist.html">チェックリスト</a>と各項目の説明に分かれています。
+<a href="checklist.html">チェックリスト</a>は簡潔に全項目をまとめたものです。
+クレートのレビューを行う際に、ざっと目を通すのに使えます。
+残りそれぞれの項目に関して章分けし、詳しい説明を行っています。</p>
+<p>APIガイドラインへの貢献に興味がある場合、<a href="https://github.com/rust-lang-nursery/api-guidelines/blob/master/CONTRIBUTING.md">contributing.md</a>を参照し、
+<a href="https://gitter.im/rust-impl-period/WG-libs-guidelines">Gitterチャンネル</a>に参加してください。</p>
+<a class="header" href="print.html#rust-api-guidelines-checklist" id="rust-api-guidelines-checklist"><h1>Rust API Guidelines Checklist</h1></a>
+<!-- Read CONTRIBUTING.md before writing new guidelines -->
+<ul>
+<li><strong>命名</strong> <em>(クレートがRustの慣用的な命名規則に従っている)</em>
+<ul>
+<li><input type="checkbox"/> 大文字・小文字の使い分けがRFC430に従っている (<a href="naming.html#c-case">C-CASE</a>)</li>
+<li><input type="checkbox"/> 変換メソッドに<code>as_</code>, <code>to_</code>, <code>into_</code>を使っている (<a href="naming.html#c-conv">C-CONV</a>)</li>
+<li><input type="checkbox"/> Getterの名前がRustの規則に従っている (<a href="naming.html#c-getter">C-GETTER</a>)</li>
+<li><input type="checkbox"/> イテレータを生成するメソッドの名前が<code>iter</code>, <code>iter_mut</code>, <code>into_iter</code>となっている (<a href="naming.html#c-iter">C-ITER</a>)</li>
+<li><input type="checkbox"/> イテレータの型名が、それを生成するメソッドと揃っている (<a href="naming.html#c-iter-ty">C-ITER-TY</a>)</li>
+<li><input type="checkbox"/> Featureの名前に余計な単語が入っていない (<a href="naming.html#c-feature">C-FEATURE</a>)</li>
+<li><input type="checkbox"/> 命名時に単語を並べる順番が揃っている (<a href="naming.html#c-word-order">C-WORD-ORDER</a>)</li>
+</ul>
+</li>
+<li><strong>相互運用性</strong> <em>(クレートが他のクレートの機能とうまく連携できる)</em>
+<ul>
+<li><input type="checkbox"/> 積極的に一般的なトレイトを型に実装している (<a href="interoperability.html#c-common-traits">C-COMMON-TRAITS</a>)
+<ul>
+<li><code>Copy</code>, <code>Clone</code>, <code>Eq</code>, <code>PartialEq</code>, <code>Ord</code>, <code>PartialOrd</code>, <code>Hash</code>, <code>Debug</code>,
+<code>Display</code>, <code>Default</code></li>
+</ul>
+</li>
+<li><input type="checkbox"/> 変換に標準のトレイト<code>From</code>, <code>AsRef</code>, <code>AsMut</code>を用いている (<a href="interoperability.html#c-conv-traits">C-CONV-TRAITS</a>)</li>
+<li><input type="checkbox"/> コレクションが<code>FromIterator</code>と<code>Extend</code>を実装している (<a href="interoperability.html#c-collect">C-COLLECT</a>)</li>
+<li><input type="checkbox"/> データ構造がSerdeの<code>Serialize</code>と<code>Deserialize</code>を実装している (<a href="interoperability.html#c-serde">C-SERDE</a>)</li>
+<li><input type="checkbox"/> 型が可能な限り<code>Send</code>,<code>Sync</code>である (<a href="interoperability.html#c-send-sync">C-SEND-SYNC</a>)</li>
+<li><input type="checkbox"/> エラー型の意味が分かりやすく、行儀の良い実装となっている (<a href="interoperability.html#c-good-err">C-GOOD-ERR</a>)</li>
+<li><input type="checkbox"/> バイナリ数値型が<code>Hex</code>, <code>Octal</code>, <code>Binary</code>によるフォーマットをサポートしている (<a href="interoperability.html#c-num-fmt">C-NUM-FMT</a>)</li>
+<li><input type="checkbox"/> 読み書きを行うジェネリックな関数が<code>R: Read</code>と<code>W: Write</code>を値渡しで受け取っている (<a href="interoperability.html#c-rw-value">C-RW-VALUE</a>)</li>
+</ul>
+</li>
+<li><strong>マクロ</strong> <em>(クレートが行儀のよいマクロを提供している)</em>
+<ul>
+<li><input type="checkbox"/> 入力の構文から結果をイメージできるようになっている (<a href="macros.html#c-evocative">C-EVOCATIVE</a>)</li>
+<li><input type="checkbox"/> アイテムを宣言するマクロが属性と衝突しない (<a href="macros.html#c-macro-attr">C-MACRO-ATTR</a>)</li>
+<li><input type="checkbox"/> アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える (<a href="macros.html#c-anywhere">C-ANYWHERE</a>)</li>
+<li><input type="checkbox"/> アイテムを宣言するマクロが可視性の指定をサポートしている (<a href="macros.html#c-macro-vis">C-MACRO-VIS</a>)</li>
+<li><input type="checkbox"/> 型の指定が柔軟である (<a href="macros.html#c-macro-ty">C-MACRO-TY</a>)</li>
+</ul>
+</li>
+<li><strong>ドキュメンテーション</strong> <em>(クレートに十分なドキュメントが付けられている)</em>
+<ul>
+<li><input type="checkbox"/> クレートレベルにコード例付きの詳細なドキュメントがある (<a href="documentation.html#c-crate-doc">C-CRATE-DOC</a>)</li>
+<li><input type="checkbox"/> 全てのアイテムにコード例が付いている (<a href="documentation.html#c-example">C-EXAMPLE</a>)</li>
+<li><input type="checkbox"/> コード例が<code>try!</code>や<code>unwrap</code>ではなく<code>?</code>を使っている (<a href="documentation.html#c-question-mark">C-QUESTION-MARK</a>)</li>
+<li><input type="checkbox"/> 関数のドキュメントにエラー、パニック、安全性に関する事項が含まれている (<a href="documentation.html#c-failure">C-FAILURE</a>)</li>
+<li><input type="checkbox"/> 文章に関係する項目へのリンクを含める (<a href="documentation.html#c-link">C-LINK</a>)</li>
+<li><input type="checkbox"/> Cargo.tomlが一般的なメタデータを全て含んでいる (<a href="documentation.html#c-metadata">C-METADATA</a>)
+<ul>
+<li>authors, description, license, homepage, documentation, repository,
+readme, keywords, categories</li>
+</ul>
+</li>
+<li><input type="checkbox"/> html_root_url属性が&quot;https://docs.rs/CRATE/X.Y.Z&quot;に設定されている (<a href="documentation.html#c-html-root">C-HTML-ROOT</a>)</li>
+<li><input type="checkbox"/> 大きな変更が全てリリースノートに記載されている (<a href="documentation.html#c-relnotes">C-RELNOTES</a>)</li>
+<li><input type="checkbox"/> 無用な実装詳細がRustdocに表示されていない (<a href="documentation.html#c-hidden">C-HIDDEN</a>)</li>
+</ul>
+</li>
+<li><strong>予測性</strong> <em>(クレートを使い、見かけ通りに動作する読みやすいコードが書ける)</em>
+<ul>
+<li><input type="checkbox"/> スマートポインタがinherentメソッドを持っていない (<a href="predictability.html#c-smart-ptr">C-SMART-PTR</a>)</li>
+<li><input type="checkbox"/> 変換メソッドが最も関係の深い型に付いている (<a href="predictability.html#c-conv-specific">C-CONV-SPECIFIC</a>)</li>
+<li><input type="checkbox"/> 明確なレシーバを持つ関数がメソッドになっている (<a href="predictability.html#c-method">C-METHOD</a>)</li>
+<li><input type="checkbox"/> 関数がoutパラメータを持たない (<a href="predictability.html#c-no-out">C-NO-OUT</a>)</li>
+<li><input type="checkbox"/> 奇妙な演算子オーバーロードを行っていない (<a href="predictability.html#c-overload">C-OVERLOAD</a>)</li>
+<li><input type="checkbox"/> <code>Deref</code>と<code>DerefMut</code>を実装しているのはスマートポインタだけである (<a href="predictability.html#c-deref">C-DEREF</a>)</li>
+<li><input type="checkbox"/> コンストラクタはスタティックなinherentメソッドである (<a href="predictability.html#c-ctor">C-CTOR</a>)</li>
+</ul>
+</li>
+<li><strong>柔軟性</strong> <em>(クレートが実用的なユースケースを幅広くカバーしている)</em>
+<ul>
+<li><input type="checkbox"/> 重複した処理を行わなくて済むように中間生成物を公開している (<a href="flexibility.html#c-intermediate">C-INTERMEDIATE</a>)</li>
+<li><input type="checkbox"/> 呼び出し側がデータをコピーするタイミングを決める (<a href="flexibility.html#c-caller-control">C-CALLER-CONTROL</a>)</li>
+<li><input type="checkbox"/> ジェネリクスを用いて関数の引数に対する制限を最小にしている (<a href="flexibility.html#c-generic">C-GENERIC</a>)</li>
+<li><input type="checkbox"/> トレイトオブジェクトとして有用なトレイトはオブジェクトセーフになっている (<a href="flexibility.html#c-object">C-OBJECT</a>)</li>
+</ul>
+</li>
+<li><strong>型安全性</strong> <em>(クレートが型システムを有効に活用している)</em>
+<ul>
+<li><input type="checkbox"/> newtypeを使って静的に値を区別する (<a href="type-safety.html#c-newtype">C-NEWTYPE</a>)</li>
+<li><input type="checkbox"/> <code>bool</code>や<code>Option</code>の代わりに意味のある型を使っている (<a href="type-safety.html#c-custom-type">C-CUSTOM-TYPE</a>)</li>
+<li><input type="checkbox"/> フラグの集合を列挙型ではなく<code>bitflags</code>で表している (<a href="type-safety.html#c-bitflag">C-BITFLAG</a>)</li>
+<li><input type="checkbox"/> 複雑な値の生成にビルダーパターンを使っている (<a href="type-safety.html#c-builder">C-BUILDER</a>)</li>
+</ul>
+</li>
+<li><strong>信頼性</strong> <em>(クレートが間違ったことをしない)</em>
+<ul>
+<li><input type="checkbox"/> 関数が引数を検証している (<a href="dependability.html#c-validate">C-VALIDATE</a>)</li>
+<li><input type="checkbox"/> デストラクタが失敗しない (<a href="dependability.html#c-dtor-fail">C-DTOR-FAIL</a>)</li>
+<li><input type="checkbox"/> ブロックする可能性のあるデストラクタには代替手段を用意する (<a href="dependability.html#c-dtor-block">C-DTOR-BLOCK</a>)</li>
+</ul>
+</li>
+<li><strong>デバッガビリティ</strong> <em>(クレートが容易なデバッグを支援している)</em>
+<ul>
+<li><input type="checkbox"/> 全てのパブリックな型に<code>Debug</code>を実装する (<a href="debuggability.html#c-debug">C-DEBUG</a>)</li>
+<li><input type="checkbox"/> <code>Debug</code>表現を空にしない (<a href="debuggability.html#c-debug-nonempty">C-DEBUG-NONEMPTY</a>)</li>
+</ul>
+</li>
+<li><strong>将来性</strong> <em>(クレートを、ユーザのコードを壊すことなく改善できる)</em>
+<ul>
+<li><input type="checkbox"/> sealedトレイトを使って下流の実装を適切に防いでいる (<a href="future-proofing.html#c-sealed">C-SEALED</a>)</li>
+<li><input type="checkbox"/> 構造体のフィールドを適切にプライベートにする (<a href="future-proofing.html#c-struct-private">C-STRUCT-PRIVATE</a>)</li>
+<li><input type="checkbox"/> newtypeを用いて実装詳細を隠蔽している (<a href="future-proofing.html#c-newtype-hide">C-NEWTYPE-HIDE</a>)</li>
+<li><input type="checkbox"/> データ構造にderiveしたトレイトの境界を定義で繰り返さない (<a href="future-proofing.html#c-struct-bounds">C-STRUCT-BOUNDS</a>)</li>
+</ul>
+</li>
+<li><strong>必要事項</strong> <em>(ある状況下では重要な問題)</em>
+<ul>
+<li><input type="checkbox"/> stableなクレートのパブリックな依存クレートがstableである (<a href="necessities.html#c-stable">C-STABLE</a>)</li>
+<li><input type="checkbox"/> クレートとその依存先がpermissiveなライセンスの下にある (<a href="necessities.html#c-permissive">C-PERMISSIVE</a>)</li>
+</ul>
+</li>
+</ul>
+<a class="header" href="print.html#命名" id="命名"><h1>命名</h1></a>
+<p><a id="c-case"></a></p>
+<a class="header" href="print.html#大文字小文字の使い分けがrfc430に従っている-c-case" id="大文字小文字の使い分けがrfc430に従っている-c-case"><h2>大文字・小文字の使い分けがRFC430に従っている (C-CASE)</h2></a>
+<p>Rustにおける基本的な命名規則は<a href="https://github.com/rust-lang/rfcs/blob/master/text/0430-finalizing-naming-conventions.md">RFC 430</a>に記述されています。</p>
+<p>Rustは「型レベル」のもの(型やトレイト)に<code>CamelCase</code>、
+「値レベル」のものに<code>snake_case</code>を使用する傾向があります。
+正確には、次表のように命名します。</p>
+<table><thead><tr><th> アイテム </th><th> 規則 </th></tr></thead><tbody>
+<tr><td> クレート </td><td> <a href="https://github.com/rust-lang-nursery/api-guidelines/issues/29">不明</a> </td></tr>
+<tr><td> モジュール </td><td> <code>snake_case</code> </td></tr>
+<tr><td> 型 </td><td> <code>CamelCase</code> </td></tr>
+<tr><td> トレイト </td><td> <code>CamelCase</code> </td></tr>
+<tr><td> Enumのバリアント </td><td> <code>CamelCase</code> </td></tr>
+<tr><td> 関数 </td><td> <code>snake_case</code> </td></tr>
+<tr><td> メソッド </td><td> <code>snake_case</code> </td></tr>
+<tr><td> 一般のコンストラクタ </td><td> <code>new</code> または <code>with_more_details</code> </td></tr>
+<tr><td> 変換を行うコンストラクタ </td><td> <code>from_some_other_type</code> </td></tr>
+<tr><td> マクロ </td><td> <code>snake_case!</code> </td></tr>
+<tr><td> ローカル変数 </td><td> <code>snake_case</code> </td></tr>
+<tr><td> スタティック変数 </td><td> <code>SCREAMING_SNAKE_CASE</code> </td></tr>
+<tr><td> 定数 </td><td> <code>SCREAMING_SNAKE_CASE</code> </td></tr>
+<tr><td> 型パラメータ </td><td> 簡潔な<code>CamelCase</code>、大抵は大文字で1文字: <code>T</code> </td></tr>
+<tr><td> ライフタイム </td><td> 短い<code>lowercase</code>、大抵は1文字: <code>'a</code>, <code>'de</code>, <code>'src</code> </td></tr>
+<tr><td> Feature </td><td> <a href="https://github.com/rust-lang-nursery/api-guidelines/issues/101">不明</a>、ただし<a href="print.html#c-feature">C-FEATURE</a>を参照 </td></tr>
+</tbody></table>
+<p>頭字語や複合語は、<code>CamelCase</code>では一語に数えます。例えば<code>UUID</code>ではなく<code>Uuid</code>を使い、<code>USize</code>ではなく<code>Usize</code>、<code>StdIn</code>ではなく<code>Stdin</code>を使って下さい。
+<code>snake_case</code>では<code>is_xid_start</code>のように小文字にします。</p>
+<p><code>snake_case</code>または<code>SCREAMING_SNAKE_CASE</code>では、
+それが最後の文字を除いて一文字で区切ってはいけません。
+例えば、<code>b_tree_map</code>ではなく<code>btree_map</code>としますが、<code>PI2</code>ではなく<code>PI_2</code>とします。</p>
+<p>クレート名の前後に<code>-rs</code>や<code>-rust</code>を付けるべきではありません。
+全てのクレートがRust製であることは分かりきっています!
+そのことをユーザに常に知らせ続ける必要はありません。
+(訳注: レポジトリ名等ではなく、Cargo.tomlで指定するクレート名についての指針です)</p>
+<a class="header" href="print.html#標準ライブラリでの例" id="標準ライブラリでの例"><h3>標準ライブラリでの例</h3></a>
+<p>この規則は標準ライブラリの全体に渡って使用されています。</p>
+<p><a id="c-conv"></a></p>
+<a class="header" href="print.html#変換メソッドにas_-to_-into_を使っている-c-conv" id="変換メソッドにas_-to_-into_を使っている-c-conv"><h2>変換メソッドに<code>as_</code>, <code>to_</code>, <code>into_</code>を使っている (C-CONV)</h2></a>
+<p>変換メソッドの名前には次のプレフィクスを付けるべきです。</p>
+<table><thead><tr><th> プレフィクス </th><th> コスト </th><th> 所有権 </th></tr></thead><tbody>
+<tr><td> <code>as_</code> </td><td> 低い </td><td> 借用 -&gt; 借用 </td></tr>
+<tr><td> <code>to_</code> </td><td> 高い </td><td> 借用 -&gt; 借用<br>借用 -&gt; 所有 (Copyでない型)<br>所有 -&gt; 所有 (Copy型) </td></tr>
+<tr><td> <code>into_</code> </td><td> 可変 </td><td> 所有 -&gt; 所有 (Copyでない型) </td></tr>
+</tbody></table>
+<p>以下に例を挙げます。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/primitive.str.html#method.as_bytes"><code>str::as_bytes()</code></a>はコストなしに、<code>str</code>をUTF-8バイト列として見たビューを返します。
+入力は借用された<code>&amp;str</code>で出力は借用された<code>&amp;[u8]</code>です。</li>
+<li><a href="https://doc.rust-lang.org/std/path/struct.Path.html#method.to_str"><code>Path::to_str</code></a>はOSの与えるパスのバイト列に対し、コストの高いUTF-8チェックを行います。
+入出力はともに借用されています。小さくない実行時コストがあるため、これを<code>as_str</code>と呼ぶことはできません。</li>
+<li><a href="https://doc.rust-lang.org/std/primitive.str.html#method.to_lowercase"><code>str::to_lowercase()</code></a>はUnicode規格に沿って<code>str</code>を小文字に変換したものを返します。
+この処理は文字列のデコードを含み、またメモリの確保も行うでしょう。
+入力は借用された<code>&amp;str</code>で出力は所有された<code>String</code>です。</li>
+<li><a href="https://doc.rust-lang.org/std/primitive.f64.html#method.to_radians"><code>f64::to_radians()</code></a>は浮動小数点数で表された角度を度からラジアンに変換します。
+入力は<code>f64</code>です。これが<code>&amp;f64</code>でないのは、コピーに殆どコストが掛からないためです。
+入力が消費されないので、このメソッドを<code>into_radians</code>と呼ぶのはミスリーディングです。</li>
+<li><a href="https://doc.rust-lang.org/std/string/struct.String.html#method.into_bytes"><code>String::into_bytes()</code></a>は<code>String</code>がラップしている<code>Vec&lt;u8&gt;</code>を取り出します。
+この処理にコストは掛かりません。このメソッドは<code>String</code>の所有権を得て、所有された<code>Vec&lt;u8&gt;</code>を返します。</li>
+<li><a href="https://doc.rust-lang.org/std/io/struct.BufReader.html#method.into_inner"><code>BufReader::into_inner()</code></a>はバッファリングされたreaderの所有権を得て、ラップされていたreaderを取り出します。
+この処理にコストは掛かりません。バッファ内のデータは破棄されます。</li>
+<li><a href="https://doc.rust-lang.org/std/io/struct.BufWriter.html#method.into_inner"><code>BufWriter::into_inner()</code></a>はバッファリングされたwriterの所有権を得て、ラップされていたwriterを取り出します。
+この処理にはコストの掛かるバッファのフラッシングが必要なことがあります。</li>
+</ul>
+<p><code>as_</code>や<code>into_</code>の付くような変換メソッドは一般に抽象を弱めます。
+内部表現を公開したり(<code>as</code>)、データを内部表現に分解したり(<code>into</code>)することになるからです。
+一方で、<code>to_</code>と付くような変換メソッドは一般に抽象レベルを保てることが多いですが、
+内部で何らかの処理を行いデータの表現方法を変換する必要があります。</p>
+<p>ある値をラップして高レベルの意味を持たせるような型において、
+ラップされた型にアクセスさせる手段は<code>into_inner()</code>メソッドによって提供されるべきです。
+これは例えば、バッファリングを提供する<a href="https://doc.rust-lang.org/std/io/struct.BufReader.html#method.into_inner"><code>BufReader</code></a>や、
+エンコード・デコードを行う<a href="https://docs.rs/flate2/0.2.19/flate2/read/struct.GzDecoder.html#method.into_inner"><code>GzDecoder</code></a>、
+アトミックなアクセスを提供する<a href="https://doc.rust-lang.org/std/sync/atomic/struct.AtomicBool.html#method.into_inner"><code>AtomicBool</code></a>といった型のようなセマンティクスを持つ型に適用できます。</p>
+<p>変換メソッドの名前に<code>mut</code>を含めるときは、返り値の型の記述と同じ順番にしてください。
+例えば<a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_mut_slice"><code>Vec::as_mut_slice</code></a>はミュータブルは名前の通りスライスを返します。
+例えば<code>as_slice_mut</code>等よりもこのような命名が推奨されます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// Return type is a mut slice.
+fn as_mut_slice(&amp;mut self) -&gt; &amp;mut [T];
+#}</code></pre></pre>
+<a class="header" href="print.html#標準ライブラリでのさらなる例" id="標準ライブラリでのさらなる例"><h5>標準ライブラリでのさらなる例</h5></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/result/enum.Result.html#method.as_ref"><code>Result::as_ref</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html#method.as_ptr"><code>RefCell::as_ptr</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec"><code>slice::to_vec</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/option/enum.Option.html#method.into_iter"><code>Option::into_iter</code></a></li>
+</ul>
+<p><a id="c-getter"></a></p>
+<a class="header" href="print.html#getterの名前がrustの規則に従っている-c-getter" id="getterの名前がrustの規則に従っている-c-getter"><h2>Getterの名前がRustの規則に従っている (C-GETTER)</h2></a>
+<p>後述するような例外を除き、getterの名前を<code>get_</code>で始めるべきではありません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub struct S {
+    first: First,
+    second: Second,
+}
+
+impl S {
+    // Not get_first.
+    pub fn first(&amp;self) -&gt; &amp;First {
+        &amp;self.first
+    }
+
+    // Not get_first_mut, get_mut_first, or mut_first.
+    pub fn first_mut(&amp;mut self) -&gt; &amp;mut First {
+        &amp;mut self.first
+    }
+}
+#}</code></pre></pre>
+<p><code>get</code>という命名は、getterによって得られるものが自明である場合にのみ使用されるべきです。
+例えば、<a href="https://doc.rust-lang.org/std/cell/struct.Cell.html#method.get"><code>Cell::get</code></a>は<code>Cell</code>の中身を返します。</p>
+<p>境界検査といった、実行時のバリデーションが必要なgetterには、
+unsafeな<code>_unchecked</code>版も用意できないか検討してください。
+そのようなメソッドの宣言はふつう、以下のようになります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn get(&amp;self, index: K) -&gt; Option&lt;&amp;V&gt;;
+fn get_mut(&amp;mut self, index: K) -&gt; Option&lt;&amp;mut V&gt;;
+unsafe fn get_unchecked(&amp;self, index: K) -&gt; &amp;V;
+unsafe fn get_unchecked_mut(&amp;mut self, index: K) -&gt; &amp;mut V;
+#}</code></pre></pre>
+<p>getterと変換(<a href="print.html#c-conv">C-CONV</a>)の間の違いは往々にして微かなもので、
+常に境界がハッキリしている訳ではありません。
+例えば<a href="https://docs.rs/tempdir/0.3.5/tempdir/struct.TempDir.html#method.path"><code>TempDir::path</code></a>は一時ディレクトリのファイルシステム上のパスのgetterとして捉えられますが、
+<a href="https://docs.rs/tempdir/0.3.5/tempdir/struct.TempDir.html#method.into_path"><code>TempDir::into_path</code></a>は一時ディレクトリを削除する責任を呼び出し側に移す変換メソッドです。
+このような場合<code>path</code>はgetterなので、<code>get_path</code>や<code>as_path</code>と呼ぶことは正しくありません。</p>
+<a class="header" href="print.html#標準ライブラリでのさらなる例-1" id="標準ライブラリでのさらなる例-1"><h3>標準ライブラリでのさらなる例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/io/struct.Cursor.html#method.get_mut"><code>std::io::Cursor::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/ptr/struct.Unique.html#method.get_mut"><code>std::ptr::Unique::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/sync/struct.PoisonError.html#method.get_mut"><code>std::sync::PoisonError::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/sync/atomic/struct.AtomicBool.html#method.get_mut"><code>std::sync::atomic::AtomicBool::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/collections/hash_map/struct.OccupiedEntry.html#method.get_mut"><code>std::collections::hash_map::OccupiedEntry::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked"><code>&lt;[T]&gt;::get_unchecked</code></a></li>
+</ul>
+<p><a id="c-iter"></a></p>
+<a class="header" href="print.html#イテレータを生成するメソッドの名前がiter-iter_mut-into_iterとなっている-c-iter" id="イテレータを生成するメソッドの名前がiter-iter_mut-into_iterとなっている-c-iter"><h2>イテレータを生成するメソッドの名前が<code>iter</code>, <code>iter_mut</code>, <code>into_iter</code>となっている ([C-ITER])</h2></a>
+<p><a href="https://github.com/rust-lang/rfcs/blob/master/text/0199-ownership-variants.md">RFC 199</a>に従ってください。</p>
+<p><code>U</code>という型の要素を持つコンテナの場合、イテレータを生成するメソッドは次のように命名するべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn iter(&amp;self) -&gt; Iter             // Iter implements Iterator&lt;Item = &amp;U&gt;
+fn iter_mut(&amp;mut self) -&gt; IterMut  // IterMut implements Iterator&lt;Item = &amp;mut U&gt;
+fn into_iter(self) -&gt; IntoIter     // IntoIter implements Iterator&lt;Item = U&gt;
+#}</code></pre></pre>
+<p>この指針は全ての要素が同質であると意味付けられたコレクションに対して適用されます。
+例えば<code>str</code>はバイト列ですが、有効なUTF-8であるという保証があるため、この指針は適用できません。
+従って<code>iter</code>/<code>iter_mut</code>/<code>into_iter</code>といったメソッド群ではなく、
+バイト列としてイテレートする<a href="https://doc.rust-lang.org/std/primitive.str.html#method.bytes"><code>str::bytes</code></a>、キャラクタ列としてイテレートする<a href="https://doc.rust-lang.org/std/primitive.str.html#method.chars"><code>str::chars</code></a>を持ちます。</p>
+<p>このガイドラインはメソッドにのみ適用され、関数は対象外です。
+例えば<code>url</code>クレートの<a href="https://docs.rs/url/1.4.0/url/percent_encoding/fn.percent_encode.html"><code>percent_encode</code></a>は文字列をパーセントエンコーディングしていくイテレータを返します。
+この場合、<code>iter</code>/<code>iter_mut</code>/<code>into_iter</code>といった命名を使うことに利点はありません。</p>
+<a class="header" href="print.html#標準ライブラリでの例-1" id="標準ライブラリでの例-1"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter"><code>Vec::iter</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter_mut"><code>Vec::iter_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_iter"><code>Vec::into_iter</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.iter"><code>BTreeMap::iter</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.iter_mut"><code>BTreeMap::iter_mut</code></a></li>
+</ul>
+<p><a id="c-iter-ty"></a></p>
+<a class="header" href="print.html#イテレータの型名がそれを生成するメソッドと揃っている-c-iter-ty" id="イテレータの型名がそれを生成するメソッドと揃っている-c-iter-ty"><h2>イテレータの型名が、それを生成するメソッドと揃っている (C-ITER-TY)</h2></a>
+<p><code>into_iter</code>というメソッドは<code>IntoIter</code>という型を返すべきです。
+他のイテレータを返すメソッドでも同様です。</p>
+<p>この指針は主にメソッドに対して適用されますが、関数に対しても大抵は適用できます。
+例えば<code>url</code>クレートの<a href="https://docs.rs/url/1.4.0/url/percent_encoding/fn.percent_encode.html"><code>percent_encode</code></a>関数は<a href="https://docs.rs/url/1.4.0/url/percent_encoding/struct.PercentEncode.html"><code>PercentEncode</code></a>
+という型名のイテレータを返します。</p>
+<p>このような命名法は<a href="https://doc.rust-lang.org/std/vec/struct.IntoIter.html"><code>vec::IntoIter</code></a>のようにモジュール名を付けて呼ぶ際に最も有用です。</p>
+<a class="header" href="print.html#標準ライブラリでの例-2" id="標準ライブラリでの例-2"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter"><code>Vec::iter</code></a> は <a href="https://doc.rust-lang.org/std/slice/struct.Iter.html"><code>Iter</code></a> を返す。</li>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter_mut"><code>Vec::iter_mut</code></a> は <a href="https://doc.rust-lang.org/std/slice/struct.IterMut.html"><code>IterMut</code></a> を返す。</li>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_iter"><code>Vec::into_iter</code></a> は <a href="https://doc.rust-lang.org/std/vec/struct.IntoIter.html"><code>IntoIter</code></a> を返す。</li>
+<li><a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.keys"><code>BTreeMap::keys</code></a> は <a href="https://doc.rust-lang.org/std/collections/btree_map/struct.Keys.html"><code>Keys</code></a> を返す。</li>
+<li><a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.values"><code>BTreeMap::values</code></a> は <a href="https://doc.rust-lang.org/std/collections/btree_map/struct.Values.html"><code>Values</code></a> を返す。</li>
+</ul>
+<p><a id="c-feature"></a></p>
+<a class="header" href="print.html#featureの名前に余計な単語が入っていない-c-feature" id="featureの名前に余計な単語が入っていない-c-feature"><h2>Featureの名前に余計な単語が入っていない (C-FEATURE)</h2></a>
+<p><a href="http://doc.crates.io/manifest.html#the-features-section">Cargoのfeature</a>の名前に意味のない単語を付けないでください。
+<code>use-abc</code>や<code>with-abc</code>などとせず、単に<code>abc</code>とするべきです。</p>
+<p>標準ライブラリへの依存がオプションである場合が最もよく目にする例でしょう。
+これを指針に従って行うと、以下のようになります。</p>
+<pre><code class="language-toml"># In Cargo.toml
+
+[features]
+default = [&quot;std&quot;]
+std = []
+</code></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// In lib.rs
+
+#![cfg_attr(not(feature = &quot;std&quot;), no_std)]
+#}</code></pre></pre>
+<p>このfeatureに<code>std</code>以外の、<code>use-std</code>や<code>with-std</code>あるいはその他の独創的な名前を付けないでください。
+そうすることで、Cargoが暗黙的に追加するオプショナルな依存性のfeatureと沿った形になります。
+例えば<code>x</code>というクレートがSerdeと標準ライブラリに対する依存をオプションとして持つとき、</p>
+<pre><code class="language-toml">[package]
+name = &quot;x&quot;
+version = &quot;0.1.0&quot;
+
+[features]
+std = [&quot;serde/std&quot;]
+
+[dependencies]
+serde = { version = &quot;1.0&quot;, optional = true }
+</code></pre>
+<p>のようになります。そして、さらに<code>x</code>に依存するとき、Serdeへの依存を
+<code>features = [&quot;serde&quot;]</code>で有効化できます。
+また、同じように標準ライブラリへの依存を<code>features = [&quot;std&quot;]</code>で有効化できます。
+Cargoによって暗黙的に追加されるfeatureは<code>serde</code>であり、<code>use-serde</code>でも<code>with-serde</code>でもありません。
+ですから、明示的なfeatureに対しても同じようにするべきなのです。</p>
+<p>関連事項として、Cargoのfeatureは追加式ですから、
+<code>no-abc</code>といったfeatureは大きな間違いです。</p>
+<p><a id="c-word-order"></a></p>
+<a class="header" href="print.html#命名時に単語を並べる順番が揃っている-c-word-order" id="命名時に単語を並べる順番が揃っている-c-word-order"><h2>命名時に単語を並べる順番が揃っている (C-WORD-ORDER)</h2></a>
+<p>標準ライブラリにおけるエラー型をいくつか示します。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/env/struct.JoinPathsError.html"><code>JoinPathsError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/str/struct.ParseBoolError.html"><code>ParseBoolError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/char/struct.ParseCharError.html"><code>ParseCharError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/num/struct.ParseFloatError.html"><code>ParseFloatError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/num/struct.ParseIntError.html"><code>ParseIntError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/sync/mpsc/enum.RecvTimeoutError.html"><code>RecvTimeoutError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/path/struct.StripPrefixError.html"><code>StripPrefixError</code></a></li>
+</ul>
+<p>全て、動詞-オブジェクト-エラーの順番で並んでいます。
+もし新たにアドレスのパースに失敗したことを表すエラーを追加するならば、
+<code>AddrParseError</code>等ではなく、
+一貫性を考えて動詞-オブジェクト-エラーの順に並べ<code>ParseAddrError</code>とすべきです。</p>
+<p>どの順番を選ぶかは大して重要ではありませんが、クレート内での一貫性、
+標準ライブラリの似た機能との整合性には注意してください。</p>
+<a class="header" href="print.html#相互運用性" id="相互運用性"><h1>相互運用性</h1></a>
+<p><a id="c-common-traits"></a></p>
+<a class="header" href="print.html#積極的に一般的なトレイトを型に実装している-c-common-traits" id="積極的に一般的なトレイトを型に実装している-c-common-traits"><h2>積極的に一般的なトレイトを型に実装している (C-COMMON-TRAITS)</h2></a>
+<p>Rustのトレイトシステムは <em>孤立</em> を許容しません。
+大まかに言うと、全ての<code>impl</code>はトレイトのあるクレートか、実装対象の型があるクレートに置かれる必要があります。
+従って、型を定義するクレートは積極的に、可能な限り全ての一般的なトレイトを実装すべきです。</p>
+<p>次のような状況を考えてみてください。</p>
+<ul>
+<li><code>std</code>クレートが<code>Display</code>トレイトを宣言。</li>
+<li><code>url</code>クレートが<code>Url</code>型を宣言、<code>Display</code>を実装せず。</li>
+<li><code>webapp</code>クレートが<code>std</code>と<code>url</code>をインポート。</li>
+</ul>
+<p>この場合、<code>url</code>が<code>Display</code>を実装していない以上、<code>webapp</code>にはどうすることもできません。
+(newtypeパターンは有効な回避策ですが、不便です。)</p>
+<p>最も重要な、一般的なトレイトを<code>std</code>から挙げます。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/marker/trait.Copy.html"><code>Copy</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/clone/trait.Clone.html"><code>Clone</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cmp/trait.PartialEq.html"><code>PartialEq</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cmp/trait.Ord.html"><code>Ord</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html"><code>PartialOrd</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.Debug.html"><code>Debug</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.Display.html"><code>Display</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/default/trait.Default.html"><code>Default</code></a></li>
+</ul>
+<p>ある型に<code>Default</code>を実装し、引数を取らない<code>new</code>コンストラクタを追加するのは
+一般的かつ開発者の予期するところであることに注意してください。
+<code>new</code>は慣用的なコンストラクタであり、利用者はそれが存在することを期待します。
+従ってコンストラクタが引数を取らないのが自然であれば、
+<code>default</code>と機能的に同一であったとしてもコンストラクタが存在しているべきです。</p>
+<p><a id="c-conv-traits"></a></p>
+<a class="header" href="print.html#変換に標準のトレイトfrom-asref-asmutを用いている-c-conv-traits" id="変換に標準のトレイトfrom-asref-asmutを用いている-c-conv-traits"><h2>変換に標準のトレイト<code>From</code>, <code>AsRef</code>, <code>AsMut</code>を用いている (C-CONV-TRAITS)</h2></a>
+<p>以下の変換用トレイトは理にかなう限り実装されているべきです。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.From.html"><code>From</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.TryFrom.html"><code>TryFrom</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.AsRef.html"><code>AsRef</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.AsMut.html"><code>AsMut</code></a></li>
+</ul>
+<p>以下の変換用トレイトは実装されるべきではありません。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.Into.html"><code>Into</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.TryInto.html"><code>TryInto</code></a></li>
+</ul>
+<p>上記のトレイトは<code>From</code>, <code>TryFrom</code>を基にしたブランケット実装を持つので、
+こちらを代わりに実装してください。</p>
+<a class="header" href="print.html#標準ライブラリでの例-3" id="標準ライブラリでの例-3"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><code>From&lt;u16&gt;</code>が<code>u32</code>に実装されています。幅の小さい整数は常に幅の大きい整数に変換可能であるためです。</li>
+<li><code>From&lt;u32&gt;</code>は<code>u16</code>に実装されて<em>いません</em>。数値が大きすぎると変換できないためです。</li>
+<li><code>TryFrom&lt;u32&gt;</code>が<code>u16</code>に実装されており、<code>u16</code>に収まらないほど数値が大きければエラーを返します。</li>
+<li><a href="https://doc.rust-lang.org/std/net/struct.Ipv6Addr.html"><code>From&lt;Ipv6Addr&gt;</code></a>が<a href="https://doc.rust-lang.org/std/net/enum.IpAddr.html"><code>IpAddr</code></a>に実装されています。この型はv4とv6の両方のIPアドレスを表すことができます。</li>
+</ul>
+<p><a id="c-collect"></a></p>
+<a class="header" href="print.html#コレクションがfromiteratorとextendを実装している-c-collect" id="コレクションがfromiteratorとextendを実装している-c-collect"><h2>コレクションが<code>FromIterator</code>と<code>Extend</code>を実装している (C-COLLECT)</h2></a>
+<p><a href="https://doc.rust-lang.org/std/iter/trait.FromIterator.html"><code>FromIterator</code></a>と<a href="https://doc.rust-lang.org/std/iter/trait.Extend.html"><code>Extend</code></a>を実装すると、
+そのコレクションは以下のイテレータメソッドと共に使うことができるようになります。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect"><code>Iterator::collect</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.partition"><code>Iterator::partition</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.unzip"><code>Iterator::unzip</code></a></li>
+</ul>
+<p><code>FromIterator</code>はイテレータが含んでいる値からコレクションを生成するものです。
+<code>Extend</code>は既存のコレクションにイテレータの含む値を追加します。</p>
+<a class="header" href="print.html#標準ライブラリでの例-4" id="標準ライブラリでの例-4"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a>は<code>FromIterator&lt;T&gt;</code>と<code>Extend&lt;T&gt;</code>の双方を実装しています。</li>
+</ul>
+<p><a id="c-serde"></a></p>
+<a class="header" href="print.html#データ構造がserdeのserializeとdeserializeを実装している-c-serde" id="データ構造がserdeのserializeとdeserializeを実装している-c-serde"><h2>データ構造がSerdeの<code>Serialize</code>と<code>Deserialize</code>を実装している (C-SERDE)</h2></a>
+<p>データ構造として使われる型は<a href="https://docs.serde.rs/serde/trait.Serialize.html"><code>Serialize</code></a>及び<a href="https://docs.serde.rs/serde/trait.Deserialize.html"><code>Deserialize</code></a>を実装しているべきです。</p>
+<p>明らかにデータ構造である型とそうでない型の間にはグレーゾーンが存在します。
+<a href="https://docs.rs/linked-hash-map/0.4.2/linked_hash_map/struct.LinkedHashMap.html"><code>LinkedHashMap</code></a>や<a href="https://doc.rust-lang.org/std/net/enum.IpAddr.html"><code>IpAddr</code></a>はデータ構造です。
+<code>LinkedHashMap</code>や<code>IpAddr</code>をJSONファイルから読み取りたい、
+あるいはIPCを用いて他のプロセスに送りたいというのは当然の要求でしょう。
+一方で<a href="https://docs.rs/byteorder/1.0.0/byteorder/enum.LittleEndian.html"><code>LittleEndian</code></a>はデータ構造ではりません。
+これは<code>byteorder</code>の使うマーカ型で、 最適化によって消えるため実行時には存在しません。
+これらは違いが明らかな例です。曖昧な例に遭遇した場合、必要ならば
+IRCの#rustあるいは#serdeチャンネルで助言を求めることができます。</p>
+<p>クレートが他の用途でSerdeに依存していなければ、
+Cargoのfeatureを使ってSerdeへの依存をオプショナルにしたいと思われるかもしれません。
+そうすることで、下流のライブラリがSerdeへの依存を必要とする場合のみSerdeがコンパイルされるようになります。</p>
+<p>他のSerdeベースのライブラリとの一貫性を保つため、Cargoのfeatureの名前は単に<code>&quot;serde&quot;</code>とすべきです。
+その他、<code>&quot;serde_impls&quot;</code>や<code>&quot;serde_serialization&quot;</code>のような名前は使わないでください。</p>
+<p>deriveを使わない場合、典型的な例は以下のようになります。</p>
+<pre><code class="language-toml">[dependencies]
+serde = { version = &quot;1.0&quot;, optional = true }
+</code></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[cfg(feature = &quot;serde&quot;)]
+extern crate serde;
+
+struct T { /* ... */ }
+
+#[cfg(feature = &quot;serde&quot;)]
+impl Serialize for T { /* ... */ }
+
+#[cfg(feature = &quot;serde&quot;)]
+impl&lt;'de&gt; Deserialize&lt;'de&gt; for T { /* ... */ }
+#}</code></pre></pre>
+<p>そして、deriveを使う場合は以下のようになります。</p>
+<pre><code class="language-toml">[dependencies]
+serde = { version = &quot;1.0&quot;, optional = true, features = [&quot;derive&quot;] }
+</code></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[cfg(feature = &quot;serde&quot;)]
+#[macro_use]
+extern crate serde;
+
+#[cfg_attr(feature = &quot;serde&quot;, derive(Serialize, Deserialize))]
+struct T { /* ... */ }
+#}</code></pre></pre>
+<p><a id="c-send-sync"></a></p>
+<a class="header" href="print.html#型が可能な限りsendsyncである-c-send-sync" id="型が可能な限りsendsyncである-c-send-sync"><h2>型が可能な限り<code>Send</code>,<code>Sync</code>である (C-SEND-SYNC)</h2></a>
+<p><a href="https://doc.rust-lang.org/std/marker/trait.Send.html"><code>Send</code></a>および<a href="https://doc.rust-lang.org/std/marker/trait.Sync.html"><code>Sync</code></a>はコンパイラが可能だと判断できれば自動的に実装されます。</p>
+<p>生ポインタを操作する型の場合、<code>Send</code>および<code>Sync</code>の実装が
+その型のスレッドセーフ特性を正確に表すように注意してください。
+以下のようなテストを追加することで、
+<code>Send</code>や<code>Sync</code>の実装が意図せず外れるような退行バグの発生を防ぐことができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[test]
+fn test_send() {
+    fn assert_send&lt;T: Send&gt;() {}
+    assert_send::&lt;MyStrangeType&gt;();
+}
+
+#[test]
+fn test_sync() {
+    fn assert_sync&lt;T: Sync&gt;() {}
+    assert_sync::&lt;MyStrangeType&gt;();
+}
+#}</code></pre></pre>
+<p><a id="c-good-err"></a></p>
+<a class="header" href="print.html#エラー型の意味が分かりやすく行儀の良い実装となっている-c-good-err" id="エラー型の意味が分かりやすく行儀の良い実装となっている-c-good-err"><h2>エラー型の意味が分かりやすく、行儀の良い実装となっている (C-GOOD-ERR)</h2></a>
+<p>エラー型とは、パブリックな関数から返される<code>Result&lt;T, E&gt;</code>における、任意の<code>E</code>のことです。
+エラー型は常に<a href="https://doc.rust-lang.org/std/error/trait.Error.html"><code>std::error::Error</code></a>トレイトを実装しているべきです。
+これは例えば<a href="https://docs.rs/error-chain"><code>error-chain</code></a>のようなエラー処理ライブラリによって異なるエラー型を抽象化して扱うために使われており、
+その型を別の型のエラーの<a href="https://doc.rust-lang.org/std/error/trait.Error.html#method.cause"><code>cause()</code></a>として使うことができるようになります。</p>
+<p>加えて、エラー型は<a href="https://doc.rust-lang.org/std/marker/trait.Send.html"><code>Send</code></a>、<a href="https://doc.rust-lang.org/std/marker/trait.Sync.html"><code>Sync</code></a>トレイトを実装するべきです。
+<code>Send</code>でないエラー型は<a href="https://doc.rust-lang.org/std/thread/fn.spawn.html"><code>thread::spawn</code></a>によって作られたスレッドから返すことはできません。
+そして<code>Sync</code>でない型は<a href="https://doc.rust-lang.org/std/sync/struct.Arc.html"><code>Arc</code></a>を用いて複数のスレッドから参照することかできません。
+これらはマルチスレッディングアプリケーションにおける、基本的なエラー処理での一般的な要求です。</p>
+<p><code>Send</code>と<code>Sync</code>は、<code>Send + Sync + Error</code>を要求する<a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.new"><code>std::io::Error::new</code></a>を用いて
+カスタムエラーをIOエラーに変換する際にも必要です。</p>
+<p>この指針について、注意が必要なのは<a href="https://docs.rs/reqwest/0.7.2/reqwest/struct.Error.html#method.get_ref"><code>reqwest::Error::get_ref</code></a>のようなErrorトレイトオブジェクトを返す関数です。
+普通は<code>Error + Send + Sync + 'static</code>が呼び出し側にとって最も有用です。
+<code>'static</code>を追加することにより、<a href="https://doc.rust-lang.org/std/error/trait.Error.html#method.downcast_ref-2"><code>Error::downcast_ref</code></a>を使うことが可能になります。</p>
+<p>例えエラーとして返せる有用な情報が無かったとしても、決して<code>()</code>をエラー型として使わないでください。</p>
+<ul>
+<li><code>()</code>は<code>Error</code>を実装していないため、<code>error-chain</code>のようなエラー処理ライブラリと共に使うことができません。</li>
+<li><code>()</code>は<code>Display</code>を実装していないため、利用者が自分でエラー時のメッセージを記述する必要があります。</li>
+<li><code>()</code>は<code>Debug</code>を実装していますが、<code>unwrap()</code>した際に役に立たないものです。</li>
+<li>下流のクレートが<code>?</code>演算子を使うためには、意味の不明瞭な<code>From&lt;()&gt;</code>をエラー型に実装しければなりません。</li>
+</ul>
+<p>代わりに、クレートや関数毎に意味の分かるエラー型を定義し、
+適切な<code>Error</code>および<code>Display</code>の実装を追加してください。
+返すべき情報がないならばユニット構造体型として定義することができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+use std::error::Error;
+use std::fmt::Display;
+
+// これの代わりに……
+fn do_the_thing() -&gt; Result&lt;Wow, ()&gt;
+
+// こうして下さい
+fn do_the_thing() -&gt; Result&lt;Wow, DoError&gt;
+
+#[derive(Debug)]
+struct DoError;
+
+impl Display for DoError { /* ... */ }
+impl Error for DoError { /* ... */ }
+#}</code></pre></pre>
+<p><code>Display</code>によって与えられるエラーメッセージは小文字とし、最後に約物は付けないで下さい。
+そして普通は簡潔なものにしてください。</p>
+<p><a href="https://doc.rust-lang.org/std/error/trait.Error.html#tymethod.description"><code>Error::description()</code></a>の返すメッセージはあまり気にする必要はありません。
+<code>description()</code>ではなく常に<code>Display</code>を使ってエラーを表示すべきですから、
+適当に<code>&quot;JSON error&quot;</code>のようなもので十分です。</p>
+<a class="header" href="print.html#標準ライブラリでの例-5" id="標準ライブラリでの例-5"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/str/struct.ParseBoolError.html"><code>ParseBoolError</code></a>は、文字列をboolとしてパースするのに失敗した際、返される型です。</li>
+</ul>
+<a class="header" href="print.html#エラーメッセージの例" id="エラーメッセージの例"><h3>エラーメッセージの例</h3></a>
+<ul>
+<li>&quot;unexpected end of file&quot;</li>
+<li>&quot;provided string was not `true` or `false`&quot;</li>
+<li>&quot;invalid IP address syntax&quot;</li>
+<li>&quot;second time provided was later than self&quot;</li>
+<li>&quot;invalid UTF-8 sequence of {} bytes from index {}&quot;</li>
+<li>&quot;environment variable was not valid unicode: {:?}&quot;</li>
+</ul>
+<p><a id="c-num-fmt"></a></p>
+<a class="header" href="print.html#バイナリ数値型がhex-octal-binaryによるフォーマットをサポートしている-c-num-fmt" id="バイナリ数値型がhex-octal-binaryによるフォーマットをサポートしている-c-num-fmt"><h2>バイナリ数値型が<code>Hex</code>, <code>Octal</code>, <code>Binary</code>によるフォーマットをサポートしている (C-NUM-FMT)</h2></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.UpperHex.html"><code>std::fmt::UpperHex</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.LowerHex.html"><code>std::fmt::LowerHex</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.Octal.html"><code>std::fmt::Octal</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.Binary.html"><code>std::fmt::Binary</code></a></li>
+</ul>
+<p>これらのトレイトはフォーマット指定子<code>{:X}</code>、<code>{:x}</code>、<code>{:o}</code>、および<code>{:b}</code>を使用した際の
+表現を制御します。</p>
+<p><code>|</code>や<code>&amp;</code>などビット単位での操作が行われる数値型にはこれらのトレイトを実装してください。
+これは特にビットフラグ型において妥当です。
+<code>struct Nanoseconds(u64)</code>のような、量を表す数値型においては必要ないでしょう。</p>
+<p><a id="c-rw-value"></a></p>
+<a class="header" href="print.html#読み書きを行うジェネリックな関数がr-readとw-writeを値渡しで受け取っている-c-rw-value" id="読み書きを行うジェネリックな関数がr-readとw-writeを値渡しで受け取っている-c-rw-value"><h2>読み書きを行うジェネリックな関数が<code>R: Read</code>と<code>W: Write</code>を値渡しで受け取っている (C-RW-VALUE)</h2></a>
+<p>標準ライブラリは次の2つの実装を含んでいます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl&lt;'a, R: Read + ?Sized&gt; Read for &amp;'a mut R { /* ... */ }
+
+impl&lt;'a, W: Write + ?Sized&gt; Write for &amp;'a mut W { /* ... */ }
+#}</code></pre></pre>
+<p>従って、<code>R: Read</code>あるいは<code>W: Write</code>という境界を持つジェネリックなパラメータを値で受け取る関数は、
+必要ならばミュータブルな参照を受け取ることも可能になっています。</p>
+<p>そういった関数のドキュメントには、ミュータブルな参照を渡すこともできると簡単に書いてあるべきです。
+新規のRustユーザが頻繁にこの点に引っ掛かるためです。
+例えば、複数回に渡ってあるファイルからデータを読み出したいにも関わらず、
+関数がreaderを値で受け取るという場合、対処方法の分からないユーザがいます。
+この場合、上記の実装を利用して<code>f</code>の代わりに<code>&amp;mut f</code>を代わりに渡せるというのが答えです。</p>
+<a class="header" href="print.html#例" id="例"><h3>例</h3></a>
+<ul>
+<li><a href="https://docs.rs/flate2/0.2/flate2/read/struct.GzDecoder.html#method.new"><code>flate2::read::GzDecoder::new</code></a></li>
+<li><a href="https://docs.rs/flate2/0.2/flate2/write/struct.GzEncoder.html#method.new"><code>flate2::write::GzEncoder::new</code></a></li>
+<li><a href="https://docs.serde.rs/serde_json/fn.from_reader.html"><code>serde_json::from_reader</code></a></li>
+<li><a href="https://docs.serde.rs/serde_json/fn.to_writer.html"><code>serde_json::to_writer</code></a></li>
+</ul>
+<a class="header" href="print.html#マクロ" id="マクロ"><h1>マクロ</h1></a>
+<p><a id="c-evocative"></a></p>
+<a class="header" href="print.html#入力の構文から結果をイメージできるようになっている-c-evocative" id="入力の構文から結果をイメージできるようになっている-c-evocative"><h2>入力の構文から結果をイメージできるようになっている (C-EVOCATIVE)</h2></a>
+<p>Rustのマクロの入力ではお好きな構文を実装することができますが、
+特異なシンタックスを導入するのではなく、
+Rustの構文に似せることでマクロ以外のコードとの統一性を保てるようにしてください。
+キーワードや記号類の選択・配置には注意してください。</p>
+<p>良い指針は、マクロの出力に似せた構文(特にキーワードと記号類)を使用することです。</p>
+<p>例えば、マクロが与えられた名前の構造体型を宣言するならば、
+マクロの入力において名前の前にキーワード<code>struct</code>を付けさせるようにし、
+コードを読む人に対して構造体型が宣言されるということを知らせてください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// このようにしてください...
+bitflags! {
+    struct S: u32 { /* ... */ }
+}
+
+// ...キーワードがなかったり...
+bitflags! {
+    S: u32 { /* ... */ }
+}
+
+// ...その場その場で勝手な単語を導入したりしないでください
+bitflags! {
+    flags S: u32 { /* ... */ }
+}
+#}</code></pre></pre>
+<p>もう一つの例はセミコロンとコンマの問題です。
+Rustにおける定数の宣言では、最後にセミコロンを付けます。
+複数の定数を宣言するマクロの場合、Rustの構文と違っているとしても同様にセミコロンを付けるようにすべきでしょう。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 普通の定数の宣言にはセミコロンが使われます
+const A: u32 = 0b000001;
+const B: u32 = 0b000010;
+
+// なので、こうすべきです...
+bitflags! {
+    struct S: u32 {
+        const C = 0b000100;
+        const D = 0b001000;
+    }
+}
+
+// ...こうではなく
+bitflags! {
+    struct S: u32 {
+        const E = 0b010000,
+        const F = 0b100000,
+    }
+}
+#}</code></pre></pre>
+<p>マクロには幅広い用例があるため、こういった特定の例はそのまま通用しないでしょう。
+ですが、同じような考え方を適用できないか考えてみて下さい。</p>
+<p><a id="c-macro-attr"></a></p>
+<a class="header" href="print.html#アイテムを宣言するマクロが属性と衝突しない-c-macro-attr" id="アイテムを宣言するマクロが属性と衝突しない-c-macro-attr"><h2>アイテムを宣言するマクロが属性と衝突しない (C-MACRO-ATTR)</h2></a>
+<p>アイテムを宣言するマクロは、それぞれに属性を付与できるようになっているべきです。
+よくある例は特定のアイテムをcfgで条件コンパイルするような場合です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+bitflags! {
+    struct Flags: u8 {
+        #[cfg(windows)]
+        const ControlCenter = 0b001;
+        #[cfg(unix)]
+        const Terminal = 0b010;
+    }
+}
+#}</code></pre></pre>
+<p>構造体型や列挙型を生成するマクロも、deriveを使えるように属性をサポートすべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+bitflags! {
+    #[derive(Default, Serialize)]
+    struct Flags: u8 {
+        const ControlCenter = 0b001;
+        const Terminal = 0b010;
+    }
+}
+#}</code></pre></pre>
+<p><a id="c-anywhere"></a></p>
+<a class="header" href="print.html#アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える-c-anywhere" id="アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える-c-anywhere"><h2>アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える (C-ANYWHERE)</h2></a>
+<p>Rustではアイテムをモジュールレベルから関数のような狭いスコープまで配置することができます。
+アイテムを宣言するマクロも同様に、いずれの場所でも動くようになっているべきです。
+そして、少なくともモジュールレベルおよび関数レベルでマクロを呼び出すテストを追加すべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[cfg(test)]
+mod tests {
+    test_your_macro_in_a!(module);
+
+    #[test]
+    fn anywhere() {
+        test_your_macro_in_a!(function);
+    }
+}
+#}</code></pre></pre>
+<p>モジュールスコープでは動くものの、関数スコープでは動かないマクロの簡単な例を挙げます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+macro_rules! broken {
+    ($m:ident :: $t:ident) =&gt; {
+        pub struct $t;
+        pub mod $m {
+            pub use super::$t;
+        }
+    }
+}
+
+broken!(m::T); // 問題なくTおよびm::Tに展開される
+
+fn g() {
+    broken!(m::U); // コンパイルに失敗する、super::Uがgではなく外側のモジュールの方を指すため
+}
+#}</code></pre></pre>
+<p><a id="c-macro-vis"></a></p>
+<a class="header" href="print.html#アイテムを宣言するマクロが可視性の指定をサポートしている-c-macro-vis" id="アイテムを宣言するマクロが可視性の指定をサポートしている-c-macro-vis"><h2>アイテムを宣言するマクロが可視性の指定をサポートしている (C-MACRO-VIS)</h2></a>
+<p>マクロによって宣言されるアイテムの可視性は、Rustの可視性の構文に沿ってください。
+デフォルトではプライベートで、<code>pub</code>が指定されたらパブリックにします。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+bitflags! {
+    struct PrivateFlags: u8 {
+        const A = 0b0001;
+        const B = 0b0010;
+    }
+}
+
+bitflags! {
+    pub struct PublicFlags: u8 {
+        const C = 0b0100;
+        const D = 0b1000;
+    }
+}
+#}</code></pre></pre>
+<p><a id="c-macro-ty"></a></p>
+<a class="header" href="print.html#型の指定が柔軟である-c-macro-ty" id="型の指定が柔軟である-c-macro-ty"><h2>型の指定が柔軟である (C-MACRO-TY)</h2></a>
+<p>マクロが<code>$t:ty</code>のようにして型を受け取る場合、
+以下の全てに対応できるべきです。</p>
+<ul>
+<li>プリミティブ型: <code>u8</code>, <code>&amp;str</code></li>
+<li>相対パス: <code>m::Data</code></li>
+<li>絶対パス: <code>::base::Data</code></li>
+<li>上位を参照する相対パス: <code>super::Data</code></li>
+<li>ジェネリクス: <code>Vec&lt;String&gt;</code></li>
+</ul>
+<p>これができないマクロの簡単な例を挙げます。
+次のマクロはプリミティブ型や絶対パスではうまく動きますが、相対パスでは動きません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+macro_rules! broken {
+    ($m:ident =&gt; $t:ty) =&gt; {
+        pub mod $m {
+            pub struct Wrapper($t);
+        }
+    }
+}
+
+broken!(a =&gt; u8); // okay
+
+broken!(b =&gt; ::std::marker::PhantomData&lt;()&gt;); // okay
+
+struct S;
+broken!(c =&gt; S); // fails to compile
+#}</code></pre></pre>
+<a class="header" href="print.html#ドキュメンテーション" id="ドキュメンテーション"><h1>ドキュメンテーション</h1></a>
+<p><a id="c-crate-doc"></a></p>
+<a class="header" href="print.html#クレートレベルにコード例付きの詳細なドキュメントがある-c-crate-doc" id="クレートレベルにコード例付きの詳細なドキュメントがある-c-crate-doc"><h2>クレートレベルにコード例付きの詳細なドキュメントがある (C-CRATE-DOC)</h2></a>
+<p><a href="https://github.com/rust-lang/rfcs/pull/1687">RFC 1687</a>を参照してください。</p>
+<p><a id="c-example"></a></p>
+<a class="header" href="print.html#全てのアイテムにコード例が付いている-c-example" id="全てのアイテムにコード例が付いている-c-example"><h2>全てのアイテムにコード例が付いている (C-EXAMPLE)</h2></a>
+<p>全てのパブリックなモジュール、トレイト、構造体型、列挙型、関数、メソッド、マクロ、
+およびtypeエイリアスに、その機能を示すコード例を含むrustdocドキュメントが存在するべきです。</p>
+<p>この指針は無理のない範囲で適用してください。</p>
+<p>適用可能な、その他のアイテムにおけるコード例へのリンクでも十分でしょう。
+例えば、ある関数がある型を使うとして、
+コード例が関数と型のどちらか一方にあれば、もう一方からはリンクするだけで十分です。</p>
+<p>コード例の目的が<em>どのように</em>そのアイテムを使うかを示すことであるとは限りません。
+読者は関数の呼び出し方、列挙型に対するmatchの使い方といった基本的な事柄は理解していると期待できます。
+ですから、コード例の目的は<em>なぜ</em>アイテムを使うべきかの提示であることも多くあります。</p>
+<pre><pre class="playpen"><code class="language-rust">// これはclone()を使うコード例の不味い例です。
+// *どう*clone()を呼ぶのか機械的に示しているだけであり、
+// *なぜ*これを使うべきかがまったく示されていません。
+fn main() {
+    let hello = &quot;hello&quot;;
+
+    hello.clone();
+}
+</code></pre></pre>
+<p><a id="c-question-mark"></a></p>
+<a class="header" href="print.html#コード例がtryやunwrapではなくを使っている-c-question-mark" id="コード例がtryやunwrapではなくを使っている-c-question-mark"><h2>コード例が<code>try!</code>や<code>unwrap</code>ではなく<code>?</code>を使っている (C-QUESTION-MARK)</h2></a>
+<p>ユーザがコード例を丸写しすることは、その良し悪しは別としてよくあることです。
+そして、エラーをunwrapするか否かという判断はユーザが自覚的に判断すべきことです。</p>
+<p>エラー処理を含むコード例を構成する一般的な方法を以下に示します。
+<code>#</code>で始まる行は<code>cargo test</code>によってコンパイルされますが、
+ユーザに見えるrustdocには表示されません。</p>
+<pre><code>/// ```rust
+/// # use std::error::Error;
+/// #
+/// # fn try_main() -&gt; Result&lt;(), Box&lt;Error&gt;&gt; {
+/// your;
+/// example?;
+/// code;
+/// #
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
+/// ```
+</code></pre>
+<p><a id="c-failure"></a></p>
+<a class="header" href="print.html#関数のドキュメントにエラーパニック安全性に関する事項が含まれている-c-failure" id="関数のドキュメントにエラーパニック安全性に関する事項が含まれている-c-failure"><h2>関数のドキュメントにエラー、パニック、安全性に関する事項が含まれている (C-FAILURE)</h2></a>
+<p>エラーとなる条件を&quot;Errors&quot;セクションに記載するべきです。
+これはトレイトメソッドに対しても同様です。エラーを返す可能性のあるトレイトメソッドには
+&quot;Errors&quot;セクションを含んだドキュメントを付けるべきです。</p>
+<p>標準ライブラリの例を挙げると、トレイトメソッド<a href="https://doc.rust-lang.org/std/io/trait.Read.html#tymethod.read"><code>std::io::Read::read</code></a>の実装のいくつかは
+エラーを返す可能性があります。</p>
+<pre><code>/// Pull some bytes from this source into the specified buffer, returning
+/// how many bytes were read.
+///
+/// ... lots more info ...
+///
+/// # Errors
+///
+/// If this function encounters any form of I/O or other error, an error
+/// variant will be returned. If an error is returned then it must be
+/// guaranteed that no bytes were read.
+</code></pre>
+<p>また、パニックを起こす条件を&quot;Panics&quot;セクションに記載するべきです。
+これはトレイトメソッドに対しても同様です。パニックを起こす可能性のあるトレイトメソッドには
+&quot;Panics&quot;セクションを含んだドキュメントを付けるべきです。</p>
+<p>標準ライブラリを例にすると、パニックを起こす可能性のあるメソッドとして<a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert"><code>Vec::insert</code></a>が挙げられます。</p>
+<pre><code>/// Inserts an element at position `index` within the vector, shifting all
+/// elements after it to the right.
+///
+/// # Panics
+///
+/// Panics if `index` is out of bounds.
+</code></pre>
+<p>あらゆるパニックの可能性を網羅する必要はありません。
+特に、呼び出し側の提供したロジックの内部でパニックが起こる場合、
+例えば以下のような事例で<code>Display</code>のパニックをドキュメントに記載するのは過剰です。
+ですが、微妙なケースではできる限り多くの可能性を網羅する方が良いでしょう。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+/// # Panics
+///
+/// This function panics if `T`'s implementation of `Display` panics.
+pub fn print&lt;T: Display&gt;(t: T) {
+    println!(&quot;{}&quot;, t.to_string());
+}
+#}</code></pre></pre>
+<p>unsafeな関数のドキュメントには、
+その関数を正しく使うために呼び出し側が守らなければならない不変条件を記載した
+&quot;Safety&quot;セクションを含めてください。</p>
+<p>例えば、unsafeな関数である<a href="https://doc.rust-lang.org/std/ptr/fn.read.html"><code>std::ptr::read</code></a>は以下の事項を呼び出し側に要求しています。</p>
+<pre><code>/// Reads the value from `src` without moving it. This leaves the
+/// memory in `src` unchanged.
+///
+/// # Safety
+///
+/// Beyond accepting a raw pointer, this is unsafe because it semantically
+/// moves the value out of `src` without preventing further usage of `src`.
+/// If `T` is not `Copy`, then care must be taken to ensure that the value at
+/// `src` is not used before the data is overwritten again (e.g. with `write`,
+/// `zero_memory`, or `copy_memory`). Note that `*src = foo` counts as a use
+/// because it will attempt to drop the value previously at `*src`.
+///
+/// The pointer must be aligned; use `read_unaligned` if that is not the case.
+</code></pre>
+<p><a id="c-link"></a></p>
+<a class="header" href="print.html#文章に関係する項目へのリンクを含める-c-link" id="文章に関係する項目へのリンクを含める-c-link"><h2>文章に関係する項目へのリンクを含める (C-LINK)</h2></a>
+<p>同じ型の別のメソッドへのリンクはふつう次のようになります。</p>
+<pre><code class="language-md">[`serialize_struct`]: #method.serialize_struct
+</code></pre>
+<p>別の型へのリンクはこうなります。</p>
+<pre><code class="language-md">[`Deserialize`]: trait.Deserialize.html
+</code></pre>
+<p>親・子モジュールへのリンクは次のようにします。</p>
+<pre><code class="language-md">[`Value`]: ../enum.Value.html
+[`DeserializeOwned`]: de/trait.DeserializeOwned.html
+</code></pre>
+<p>この指針はRFC 1574の<a href="https://github.com/rust-lang/rfcs/blob/master/text/1574-more-api-documentation-conventions.md#link-all-the-things">&quot;Link all the things&quot;</a>によって公式に推奨されています。</p>
+<p><a id="c-metadata"></a></p>
+<a class="header" href="print.html#cargotomlが一般的なメタデータを全て含んでいる-c-metadata" id="cargotomlが一般的なメタデータを全て含んでいる-c-metadata"><h2>Cargo.tomlが一般的なメタデータを全て含んでいる (C-METADATA)</h2></a>
+<p><code>Cargo.toml</code>の<code>[package]</code>セクションは以下の値を含むべきです。</p>
+<ul>
+<li><code>authors</code></li>
+<li><code>description</code></li>
+<li><code>license</code></li>
+<li><code>repository</code></li>
+<li><code>readme</code></li>
+<li><code>keywords</code></li>
+<li><code>categories</code></li>
+</ul>
+<p>加えて、2つの任意項目があります。</p>
+<ul>
+<li><code>documentation</code></li>
+<li><code>homepage</code></li>
+</ul>
+<p>デフォルトで、<em>crates.io</em>は<a href="https://docs.rs"><em>docs.rs</em></a>上のドキュメントへリンクします。
+<code>documentation</code>メタデータは<em>docs.rs</em>以外の場所でドキュメントをホストしている場合にのみ必要です。
+例えば、そのクレートが<em>docs.rs</em>のビルド環境に存在しない共有ライブラリを要求している場合などです。</p>
+<p><code>homepage</code>メタデータはソースレポジトリやAPIドキュメント以外の独自のウェブサイトがある場合のみ
+使用されるべきです。<code>documentation</code>や<code>repository</code>と重複した値を入れないでください。
+例えば、Serdeは<code>homepage</code>を専用のウェブサイトである<em>https://serde.rs</em>に設定しています。</p>
+<p><a id="c-html-root"></a></p>
+<a class="header" href="print.html#html_root_url属性が設定されている-c-html-root" id="html_root_url属性が設定されている-c-html-root"><h3>html_root_url属性が設定されている (C-HTML-ROOT)</h3></a>
+<!--
+Remove this guideline once rustdoc links no-deps documentation with no
+html_root_url to docs.rs by default.
+https://github.com/rust-lang/rust/issues/42301
+-->
+<p>docs.rsを主なAPIドキュメントとして使っているならば<code>&quot;https://docs.rs/CRATE/MAJOR.MINOR.PATCH&quot;</code>に設定してください。</p>
+<p><code>html_root_url</code>属性は、rustdocが下流クレートをコンパイルする際にどのようにURLを作成するべきかを伝えるものです。
+これが無ければ、あなたのクレートに依存するクレートにおいて、ドキュメント中のリンクが間違ったものになります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![doc(html_root_url = &quot;https://docs.rs/log/0.3.8&quot;)]
+#fn main() {
+#}</code></pre></pre>
+<p>バージョンがURLに含まれていることから分かる通り、
+<code>Cargo.toml</code>内のバージョン番号と同期させる必要があります。
+<code>html_root_url</code>がクレートのバージョンとずれた場合に失敗するインテグレーションテストを追加する
+<a href="https://crates.io/crates/version-sync"><code>version-sync</code></a>クレートが役に立つはずです。</p>
+<p>この方式が気に入らなければ、<code>Cargo.toml</code>のバージョンの所にメモ書きを残しておくとよいでしょう。</p>
+<pre><code class="language-toml">version = &quot;0.3.8&quot; # html_root_urlの更新 忘れない
+</code></pre>
+<p>docs.rs以外にドキュメントをホストしているなら、<code>html_root_url</code>の値にクレート名 + index.htmlを付け足すと
+あなたのクレートのルートモジュールにたどり着けるように設定してください。
+例えば、ルートモジュールが<code>&quot;https://api.rocket.rs/rocket/index.html&quot;</code>にあるならば、
+<code>html_root_url</code>は<code>&quot;https://api.rocket.rs&quot;</code>とすべきです。</p>
+<p><a id="c-relnotes"></a></p>
+<a class="header" href="print.html#大きな変更が全てリリースノートに記載されている-c-relnotes" id="大きな変更が全てリリースノートに記載されている-c-relnotes"><h2>大きな変更が全てリリースノートに記載されている (C-RELNOTES)</h2></a>
+<p>クレートのユーザはリリースノートを読むことでバージョン間の変更点を知ることができます。
+クレートレベルのドキュメントまたはCargo.tomlからリンクされたリポジトリにリリースノートへのリンクを置いてください。</p>
+<p>破壊的変更(<a href="https://github.com/rust-lang/rfcs/blob/master/text/1105-api-evolution.md">RFC 1105</a>で定義されている)は明確に区別されているべきです。</p>
+<p>Gitを用いてソースコードの履歴を管理しているなら、
+<em>crates.io</em>に発行された全てのリリースは対応するコミットにタグを付けてください。
+Git以外のVCSでも同様の処理をしておくべきです。</p>
+<pre><code class="language-bash"># Tag the current commit
+GIT_COMMITTER_DATE=$(git log -n1 --pretty=%aD) git tag -a -m &quot;Release 0.3.0&quot; 0.3.0
+git push --tags
+</code></pre>
+<p>アノテーション付きタグが一つでも存在するとアノテーションのないタグを無視するGitコマンドがあるため、
+アノテーション付きタグの使用が推奨されます。</p>
+<a class="header" href="print.html#例-1" id="例-1"><h3>例</h3></a>
+<ul>
+<li><a href="https://github.com/serde-rs/serde/releases/tag/v1.0.0">Serde 1.0.0 release notes</a></li>
+<li><a href="https://github.com/serde-rs/serde/releases/tag/v0.9.8">Serde 0.9.8 release notes</a></li>
+<li><a href="https://github.com/serde-rs/serde/releases/tag/v0.9.0">Serde 0.9.0 release notes</a></li>
+<li><a href="https://github.com/diesel-rs/diesel/blob/master/CHANGELOG.md">Diesel change log</a></li>
+</ul>
+<p><a id="c-hidden"></a></p>
+<a class="header" href="print.html#無用な実装詳細がrustdocに表示されていない-c-hidden" id="無用な実装詳細がrustdocに表示されていない-c-hidden"><h2>無用な実装詳細がRustdocに表示されていない (C-HIDDEN)</h2></a>
+<p>Rustdocはユーザがそのクレートを使用するのに必要な情報を網羅すべきですが、
+それ以上の内容は含むべきではありません。
+文章中で関係のある実装詳細を解説するのはよいですが、
+実際にドキュメント項目として現れてはいけません。</p>
+<p>特に、どのようなimplがドキュメントに表示されるかに関しては精選するようにしてください。
+ユーザがクレートを使用するのに必要なものだけ示し、それ以外は隠しましょう。
+以下のコードでは、<code>PublicError</code>のドキュメントに<code>From&lt;PrivateError&gt;</code>が表示されてしまいます。
+ユーザが<code>PrivateError</code>型を扱うことはないため、この項目はユーザにとっては関係ないものです。
+なので、<code>#[doc(hidden)]</code>を使って隠します。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This error type is returned to users.
+pub struct PublicError { /* ... */ }
+
+// This error type is returned by some private helper functions.
+struct PrivateError { /* ... */ }
+
+// Enable use of `?` operator.
+#[doc(hidden)]
+impl From&lt;PrivateError&gt; for PublicError {
+    fn from(err: PrivateError) -&gt; PublicError {
+        /* ... */
+    }
+}
+#}</code></pre></pre>
+<p><a href="https://github.com/rust-lang/rfcs/blob/master/text/1422-pub-restricted.md"><code>pub(crate)</code></a>も実装詳細をパブリックなAPIから隠す便利なツールです。
+同じモジュール以外からもアイテムを使えるようになりますが、他のクレートからは見えません。</p>
+<a class="header" href="print.html#予測性" id="予測性"><h1>予測性</h1></a>
+<p><a id="c-smart-ptr"></a></p>
+<a class="header" href="print.html#スマートポインタがinherentメソッドを持っていない-c-smart-ptr" id="スマートポインタがinherentメソッドを持っていない-c-smart-ptr"><h2>スマートポインタがinherentメソッドを持っていない (C-SMART-PTR)</h2></a>
+<p>例えば、<a href="https://doc.rust-lang.org/std/boxed/struct.Box.html#method.into_raw"><code>Box::into_raw</code></a>は次のように定義されています。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl&lt;T&gt; Box&lt;T&gt; where T: ?Sized {
+    fn into_raw(b: Box&lt;T&gt;) -&gt; *mut T { /* ... */ }
+}
+
+let boxed_str: Box&lt;str&gt; = /* ... */;
+let ptr = Box::into_raw(boxed_str);
+#}</code></pre></pre>
+<p>もしこれがinherentメソッドであったら、呼び出そうとしているメソッドが<code>T</code>のものなのか
+<code>Box&lt;T&gt;</code>のものなのか区別が付かなくなります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl&lt;T&gt; Box&lt;T&gt; where T: ?Sized {
+    // Do not do this.
+    fn into_raw(self) -&gt; *mut T { /* ... */ }
+}
+
+let boxed_str: Box&lt;str&gt; = /* ... */;
+
+// スマートポインタのDerefを経由してstrのメソッドにアクセスしている
+boxed_str.chars()
+
+// これは`Box&lt;str&gt;`のメソッド……?
+boxed_str.into_raw()
+#}</code></pre></pre>
+<p><a id="c-conv-specific"></a></p>
+<a class="header" href="print.html#変換メソッドが最も関係の深い型に付いている-c-conv-specific" id="変換メソッドが最も関係の深い型に付いている-c-conv-specific"><h2>変換メソッドが最も関係の深い型に付いている (C-CONV-SPECIFIC)</h2></a>
+<p>迷ったら<code>_from</code>よりも<code>to_</code>/<code>as_</code>/<code>into_</code>を選んでください。
+後者の方がより使いやすく、また他のメソッドにチェーンすることもできるからです。</p>
+<p>2つの型の間の変換において、多くの場合どちらか一方が明らかに特徴的です。
+すなわち、他方にはない不変条件や解釈が追加されています。
+例えば<a href="https://doc.rust-lang.org/std/primitive.str.html"><code>str</code></a>はUTF-8でエンコードされたバイト列ですから、単なるバイト列である<code>&amp;[u8]</code>より特徴的です。</p>
+<p>変換メソッドは、関係する型の中で、より特徴的なものが持つべきです。
+従って、<code>str</code>は<a href="https://doc.rust-lang.org/std/primitive.str.html#method.as_bytes"><code>as_bytes</code></a>メソッド及び<a href="https://doc.rust-lang.org/std/str/fn.from_utf8.html"><code>from_utf8</code></a>コンストラクタを持つのです。
+この方が直感的であるだけでなく、<code>&amp;[u8]</code>のような型が無数の変換メソッドで汚染されていくという事態が避けられます。</p>
+<p><a id="c-method"></a></p>
+<a class="header" href="print.html#明確なレシーバを持つ関数がメソッドになっている-c-method" id="明確なレシーバを持つ関数がメソッドになっている-c-method"><h2>明確なレシーバを持つ関数がメソッドになっている (C-METHOD)</h2></a>
+<p>特定の型と強く関連した操作についてはメソッドにしてください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl Foo {
+    pub fn frob(&amp;self, w: widget) { /* ... */ }
+}
+#}</code></pre></pre>
+<p>関数にしてはいけません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn frob(foo: &amp;Foo, w: widget) { /* ... */ }
+#}</code></pre></pre>
+<p>関数でなくメソッドを選ぶことには多数の利点があります。</p>
+<ul>
+<li>インポートしたり関数へのパスを記述したりする必要がない。その型の値さえあれば必要な操作ができます。</li>
+<li>呼び出し時に自動借用が働きます。 (可変借用も含めて)</li>
+<li>「この型<code>T</code>で何ができるんだろう」という疑問への答えが簡単になります。 (特にrustdocを使用している場合)</li>
+<li><code>self</code>記法が使われるため、より簡潔かつ明白に所有権の区別が示されます。</li>
+</ul>
+<p><a id="c-no-out"></a></p>
+<a class="header" href="print.html#関数がoutパラメータを持たない-c-no-out" id="関数がoutパラメータを持たない-c-no-out"><h2>関数がoutパラメータを持たない (C-NO-OUT)</h2></a>
+<p>例えば複数の<code>Bar</code>を返すときはこのようにしてください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo() -&gt; (Bar, Bar)
+#}</code></pre></pre>
+<p>このようにoutパラメータのようなものを取ってはいけません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo(output: &amp;mut Bar) -&gt; Bar
+#}</code></pre></pre>
+<p>タプルや構造体を使って複数の値を返しても効率のよいコードにコンパイルされますし、
+ヒープの確保も行われません。複数の値を返す必要があるならこれらの型を利用すべきです。</p>
+<p>例外は関数が呼び出し側の所有するデータを変更する場合です。
+例えば、バッファの再利用をする場合は次のようになるでしょう。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn read(&amp;mut self, buf: &amp;mut [u8]) -&gt; io::Result&lt;usize&gt;
+#}</code></pre></pre>
+<p><a id="c-overload"></a></p>
+<a class="header" href="print.html#奇妙な演算子オーバーロードを行っていない-c-overload" id="奇妙な演算子オーバーロードを行っていない-c-overload"><h2>奇妙な演算子オーバーロードを行っていない (C-OVERLOAD)</h2></a>
+<p>組み込みの演算子(<code>*</code>や<code>|</code>など)は<a href="https://doc.rust-lang.org/std/ops/index.html#traits"><code>std::ops</code></a>にあるトレイトを実装することで使えるようになります。
+これらの演算子には元から意味が付与されています。
+例えば、<code>Mul</code>は乗算のような(そして結合性などの特性を共有した)演算にのみ実装されるべきです。</p>
+<p><a id="c-deref"></a></p>
+<a class="header" href="print.html#derefとderefmutを実装しているのはスマートポインタだけである-c-deref" id="derefとderefmutを実装しているのはスマートポインタだけである-c-deref"><h2><code>Deref</code>と<code>DerefMut</code>を実装しているのはスマートポインタだけである (C-DEREF)</h2></a>
+<p><code>Deref</code>トレイトはコンパイラによって様々な状況で暗黙的に使われ、メソッドの解決と関わります。
+その周辺の規則はスマートポインタを念頭において設計されているため、
+これらのトレイトはスマートポインタに対してのみ実装されるべきです。</p>
+<a class="header" href="print.html#標準ライブラリでの例-6" id="標準ライブラリでの例-6"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/boxed/struct.Box.html"><code>Box&lt;T&gt;</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/string/struct.String.html"><code>String</code></a>は<a href="https://doc.rust-lang.org/std/primitive.str.html"><code>str</code></a>を指すスマートポインタ</li>
+<li><a href="https://doc.rust-lang.org/std/rc/struct.Rc.html"><code>Rc&lt;T&gt;</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/sync/struct.Arc.html"><code>Arc&lt;T&gt;</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/borrow/enum.Cow.html"><code>Cow&lt;'a, T&gt;</code></a></li>
+</ul>
+<p><a id="c-ctor"></a></p>
+<a class="header" href="print.html#コンストラクタはスタティックなinherentメソッドである-c-ctor" id="コンストラクタはスタティックなinherentメソッドである-c-ctor"><h2>コンストラクタはスタティックなinherentメソッドである (C-CTOR)</h2></a>
+<p>Rustにおいて、「コンストラクタ」は単なる慣習に過ぎません。
+コンストラクタの命名には様々な慣習があり、その区別が分かり辛いことが多々あります。</p>
+<p>最も基本的なコンストラクタの形は引数のない<code>new</code>メソッドです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl&lt;T&gt; Example&lt;T&gt; {
+    pub fn new() -&gt; Example&lt;T&gt; { /* ... */ }
+}
+#}</code></pre></pre>
+<p>コンストラクタは、その生成する型のスタティック(<code>self</code>を取らない)なinherentメソッドです。
+型をインポートする慣習と併せれば、分かりやすく簡潔にその型を生成することができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+use example::Example;
+
+// Construct a new Example.
+let ex = Example::new();
+#}</code></pre></pre>
+<p><code>new</code>という名前は、1つ目の最も重要なコンストラクタに使われるべきです。
+上記の例のように引数を取らないこともあれば、<code>Box</code>に入れる値を取る<a href="https://doc.rust-lang.org/stable/std/boxed/struct.Box.html#method.new"><code>Box::new</code></a>のように、
+引数を取ることもあります。</p>
+<p>主にI/Oリソースを表す型では、<a href="https://doc.rust-lang.org/stable/std/fs/struct.File.html#method.open"><code>File::open</code></a>、<a href="https://docs.rs/memmap/0.5.2/memmap/struct.Mmap.html#method.open"><code>Mmap::open</code></a>、
+<a href="https://doc.rust-lang.org/stable/std/net/struct.TcpStream.html#method.connect"><code>TcpStream::connect</code></a>、あるいは <a href="https://doc.rust-lang.org/stable/std/net/struct.UdpSocket.html#method.bind"><code>UpdSocket::bind</code></a>のように
+コンストラクタの命名が異なっていることがあります。
+これらは、各々の領域で適した名前が選ばれています。</p>
+<p>ある型の値を生成する方法が複数存在することは多くあります。
+そういった場合、2個目以降のコンストラクタには<code>_with_foo</code>などと名前の最後に付けることが一般的です。
+例えば、<a href="https://docs.rs/memmap/0.5.2/memmap/struct.Mmap.html#method.open_with_offset"><code>Mmap::open_with_offset</code></a>などです。
+複数のオプションがあるならばビルダーパターン(<a href="type-safety.html#c-builder">C-BUILDER</a>)の使用も考えてください。</p>
+<p>別の型の値を取って変換を行うコンストラクタというものもあります。
+それらは<a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.from_raw_os_error"><code>std::io::Error::from_raw_os_error</code></a>のように、一般に<code>from_</code>から始まる名前を持ちます。
+ここで、よく似たものに<code>From</code>トレイト(<a href="interoperability.html#c-conv-traits">C-CONV-TRAITS</a>)が存在します。
+<code>from_</code>の付いた変換コンストラクタと<code>From&lt;T&gt;</code>実装の間には3つの相違点があります。</p>
+<ul>
+<li><code>from_</code>コンストラクタはunsafeにすることができますが、<code>From</code>の実装ではできません。
+例: <a href="https://doc.rust-lang.org/std/boxed/struct.Box.html#method.from_raw"><code>Box::from_raw</code></a>。</li>
+<li><code>from_</code>コンストラクタは、<a href="https://doc.rust-lang.org/std/primitive.u64.html#method.from_str_radix"><code>u64::from_str_radix</code></a>のように
+元になるデータを区別するための追加の引数を取ることができます。</li>
+<li><code>From</code>実装は元のデータから出力の型のエンコード方法を決定できる場合にのみ適しています。
+<a href="https://doc.rust-lang.org/std/primitive.u64.html#method.from_be"><code>u64::from_be</code></a>や<a href="https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8"><code>String::from_utf8</code></a>のように入力の型が単なるデータ列であるとき、
+コンストラクタの名前によってその意味を伝えることが可能です。</li>
+</ul>
+<a class="header" href="print.html#標準ライブラリでの例-7" id="標準ライブラリでの例-7"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.new"><code>std::io::Error::new</code></a>はIOエラーの生成に使われるコンストラクタ</li>
+<li><a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.from_raw_os_error"><code>std::io::Error::from_raw_os_error</code></a>は
+OSから与えられたエラーコードを変換するコンストラクタ</li>
+<li><a href="https://doc.rust-lang.org/stable/std/boxed/struct.Box.html#method.new"><code>Box::new</code></a>は引数を1つとり、コンテナ型を生成するコンストラクタ</li>
+<li><a href="https://doc.rust-lang.org/stable/std/fs/struct.File.html#method.open"><code>File::open</code></a>はファイルをオープンする</li>
+<li><a href="https://docs.rs/memmap/0.5.2/memmap/struct.Mmap.html#method.open_with_offset"><code>Mmap::open_with_offset</code></a>は指定されたオプションでメモリーマップをオープンする</li>
+</ul>
+<a class="header" href="print.html#柔軟性" id="柔軟性"><h1>柔軟性</h1></a>
+<p><a id="c-intermediate"></a></p>
+<a class="header" href="print.html#重複した処理を行わなくて済むように中間生成物を公開している-c-intermediate" id="重複した処理を行わなくて済むように中間生成物を公開している-c-intermediate"><h2>重複した処理を行わなくて済むように中間生成物を公開している (C-INTERMEDIATE)</h2></a>
+<p>何らかの処理を行って結果を返す関数の多くは、関連したデータを途中で生成しています。
+もしユーザにとって有益なものがあれば、それを公開するAPIの追加を検討してください。</p>
+<a class="header" href="print.html#標準ライブラリでの例-8" id="標準ライブラリでの例-8"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li>
+<p><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.binary_search"><code>Vec::binary_search</code></a>は目的の値が見つかったか否かを<code>bool</code>で表したり、
+目的の値が見つかった位置を<code>Option&lt;usize&gt;</code>で返すようにはなっていません。
+代わりに、もし見つかればその位置を、そして見つからなければその値が挿入されるべき位置を返します。</p>
+</li>
+<li>
+<p><a href="https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8"><code>String::from_utf8</code></a>は入力が正しいUTF-8でなければ失敗します。
+そのとき、入力のどこまでが正しいUTF-8であったかを返し、また入力されたバイト列の所有権も返します。</p>
+</li>
+<li>
+<p><a href="https://doc.rust-lang.org/stable/std/collections/struct.HashMap.html#method.insert"><code>HashMap::insert</code></a>はそのキーの場所に元から値が存在していたら、その値を<code>Option&lt;T&gt;</code>で返します。
+ユーザがこの値を必要としているとき、この挙動がなければハッシュテーブルへのルックアップを二度繰り返さなければなりません。</p>
+</li>
+</ul>
+<p><a id="c-caller-control"></a></p>
+<a class="header" href="print.html#呼び出し側がデータをコピーするタイミングを決める-c-caller-control" id="呼び出し側がデータをコピーするタイミングを決める-c-caller-control"><h2>呼び出し側がデータをコピーするタイミングを決める (C-CALLER-CONTROL)</h2></a>
+<p>引数の所有権を要する関数は、借用して複製するのではなく所有権を受け取るべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 良い例:
+fn foo(b: Bar) {
+    /* use b as owned, directly */
+}
+
+// 悪い例:
+fn foo(b: &amp;Bar) {
+    let b = b.clone();
+    /* use b as owned after cloning */
+}
+#}</code></pre></pre>
+<p>もし関数が引数の所有権を必要としないのなら、
+所有権を取って最終的にdropする代わりに可変あるいは非可変借用を受け取るべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 良い例:
+fn foo(b: &amp;Bar) {
+    /* use b as borrowed */
+}
+
+// 悪い例:
+fn foo(b: Bar) {
+    /* use b as borrowed, it is implicitly dropped before function returns */
+}
+#}</code></pre></pre>
+<p><code>Copy</code>トレイトは本当に必要な場合のみ使用してください。
+単に低コストでコピーが可能であると伝えるために使用してはいけません。</p>
+<p><a id="c-generic"></a></p>
+<a class="header" href="print.html#ジェネリクスを用いて関数の引数に対する制限を最小にしている-c-generic" id="ジェネリクスを用いて関数の引数に対する制限を最小にしている-c-generic"><h2>ジェネリクスを用いて関数の引数に対する制限を最小にしている (C-GENERIC)</h2></a>
+<p>関数の引数に対する制約が少ないほど、その関数は幅広く使えるようになります。</p>
+<p>単にイテレーションが必要なだけであれば、このようにジェネリクスを用いてください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo&lt;I: IntoIterator&lt;Item = i64&gt;&gt;(iter: I) { /* ... */ }
+#}</code></pre></pre>
+<p>特定の型を指定しないでください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo(c: &amp;[i64]) { /* ... */ }
+fn foo(c: &amp;Vec&lt;i64&gt;) { /* ... */ }
+fn foo(c: &amp;SomeOtherCollection&lt;i64&gt;) { /* ... */ }
+#}</code></pre></pre>
+<p>もっと言えば、ジェネリクスを用い、関数の引数に対して必要な制約を正確に示してください。</p>
+<a class="header" href="print.html#ジェネリクスの利点" id="ジェネリクスの利点"><h3>ジェネリクスの利点</h3></a>
+<ul>
+<li>
+<p><em>再利用性</em>。ジェネリックな関数は受け取る型への明確な要件を示しつつ、
+多くの型に対して適用できます。</p>
+</li>
+<li>
+<p><em>スタティックディスパッチと最適化</em>。ジェネリック関数を呼び出すと特定の型に特殊化(&quot;monomorphized&quot;)されます。
+トレイトメソッドの呼び出しはスタティックかつ実装を直接呼び出す形に変換され、
+コンパイラは呼び出しをインライン化し最適化することが可能です。</p>
+</li>
+<li>
+<p><em>レイアウトのインライン化</em>。構造体型や列挙型がジェネリックな型<code>T</code>を持つとき、
+型<code>T</code>の値へは間接的なアクセスを挟むことなく、構造体型や列挙型の内部にインライン化されます。</p>
+</li>
+<li>
+<p><em>推論</em>。ジェネリック関数の型パラメータは大抵推論が可能であるため、
+明示的な変換やその他のメソッド呼び出しといったコード中の冗長な部分を削減することが可能です。</p>
+</li>
+<li>
+<p><em>正確な型</em>。ジェネリクスによって型に名前を与えられるため、
+正確にその型を受け取りあるいは生成する箇所を指定することができます。
+例えば、次の関数は全く同じ型<code>T</code>を受け取り、返すことが保証されます。
+<code>Trait</code>を実装する異なる型を用いて呼び出したりすることはできません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn binary&lt;T: Trait&gt;(x: T, y: T) -&gt; T
+#}</code></pre></pre>
+</li>
+</ul>
+<a class="header" href="print.html#ジェネリクスの欠点" id="ジェネリクスの欠点"><h3>ジェネリクスの欠点</h3></a>
+<ul>
+<li>
+<p><em>コードサイズ</em>。ジェネリック関数の特殊化により、関数の中身は複製されます。
+コードサイズの増大がパフォーマンスと釣り合うかどうか検討するべきです。</p>
+</li>
+<li>
+<p><em>一様な型</em>。これは型が正確であることの裏返しです。型パラメータ<code>T</code>は一つの実際の型をもちます。
+例えば<code>Vec&lt;T&gt;</code>は単一の具体型のコレクションです(そして内部的にはメモリ上に隣り合って並べられます)。
+一様でないコレクションが有用な場合もあります。<a href="print.html#c-object">trait objects</a>を参照してください。</p>
+</li>
+<li>
+<p><em>関数の定義の複雑化</em>。ジェネリクスを多用すると、関数の定義を読んだり理解することが難しくなります。</p>
+</li>
+</ul>
+<a class="header" href="print.html#標準ライブラリの例" id="標準ライブラリの例"><h3>標準ライブラリの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/fs/struct.File.html#method.open"><code>std::fs::File::open</code></a>は<code>AsRef&lt;Path&gt;</code>というジェネリックな型を取ります。
+これにより、文字列リテラル<code>&quot;f.txt&quot;</code>や<a href="https://doc.rust-lang.org/std/path/struct.Path.html"><code>Path</code></a>、あるいは<a href="https://doc.rust-lang.org/std/ffi/struct.OsString.html"><code>OsString</code></a>などを渡して
+ファイルを開くことができます。</li>
+</ul>
+<p><a id="c-object"></a></p>
+<a class="header" href="print.html#トレイトオブジェクトとして有用なトレイトがオブジェクトセーフになっている-c-object" id="トレイトオブジェクトとして有用なトレイトがオブジェクトセーフになっている-c-object"><h2>トレイトオブジェクトとして有用なトレイトがオブジェクトセーフになっている (C-OBJECT)</h2></a>
+<p>トレイトオブジェクトには大きな制約があります。それは、トレイトオブジェクト経由で呼ばれるメソッドは
+ジェネリクスを使用できず、また<code>Self</code>をレシーバ以外の引数で使用できないことです。</p>
+<p>トレイトを設計する際、そのトレイトがオブジェクトとして使用されるのか
+ジェネリクスの境界として使用されるのかを決めておく必要があります。</p>
+<p>そのトレイトがオブジェクトとして使用されることを念頭に置くならば、
+トレイトメソッドではジェネリクスの代わりにトレイトオブジェクトを使用すべきです。</p>
+<p><code>Self: Sized</code>という<code>where</code>節を用いることで、特定のメソッドをトレイトオブジェクトから除外することができます。
+次のトレイトはジェネリックなメソッドを持つためオブジェクトセーフではありません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+trait MyTrait {
+    fn object_safe(&amp;self, i: i32);
+
+    fn not_object_safe&lt;T&gt;(&amp;self, t: T);
+}
+#}</code></pre></pre>
+<p>ジェネリックなメソッドに<code>Self: Sized</code>を要求させることでトレイトオブジェクトから除外し、
+そのトレイトをオブジェクトセーフにすることが可能です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+trait MyTrait {
+    fn object_safe(&amp;self, i: i32);
+
+    fn not_object_safe&lt;T&gt;(&amp;self, t: T) where Self: Sized;
+}
+#}</code></pre></pre>
+<a class="header" href="print.html#トレイトオブジェクトの利点" id="トレイトオブジェクトの利点"><h3>トレイトオブジェクトの利点</h3></a>
+<ul>
+<li><em>一様性</em>。これ無しでは解決できない問題もあります。</li>
+<li><em>コードサイズ</em>。ジェネリクスと異なり、トレイトオブジェクトは特殊化(monomorphized)されたコードを生成しないため、
+コードサイズを大幅に削減することができます。</li>
+</ul>
+<a class="header" href="print.html#トレイトオブジェクトの欠点" id="トレイトオブジェクトの欠点"><h3>トレイトオブジェクトの欠点</h3></a>
+<ul>
+<li><em>ジェネリックなメソッドが使えない</em>。トレイトオブジェクトは今のところジェネリックなメソッドを
+持つことができません。</li>
+<li><em>動的ディスパッチとファットポインタ</em>。トレイトオブジェクトは、パフォーマンスに影響する可能性のある
+間接アクセスと仮想関数テーブルによるディスパッチを引き起こします。</li>
+<li><em>Selfが使えない</em>。メソッドのレシーバ引数を除いて<code>Self</code>型を取ることはできません。</li>
+</ul>
+<a class="header" href="print.html#標準ライブラリでの例-9" id="標準ライブラリでの例-9"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/io/trait.Read.html"><code>io::Read</code></a>と<a href="https://doc.rust-lang.org/std/io/trait.Write.html"><code>io::Write</code></a>は頻繁にオブジェクトとして使われます。</li>
+<li><a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html"><code>Iterator</code></a>には、トレイトオブジェクトとして使用できるようにするため、
+<code>Self: Sized</code>が指定されたジェネリックなメソッドがあります。</li>
+</ul>
+<a class="header" href="print.html#型安全性" id="型安全性"><h1>型安全性</h1></a>
+<p><a id="c-newtype"></a></p>
+<a class="header" href="print.html#newtypeを使って静的に値を区別する-c-newtype" id="newtypeを使って静的に値を区別する-c-newtype"><h2>newtypeを使って静的に値を区別する (C-NEWTYPE)</h2></a>
+<p>実際の型は同じでも、newtypeを用いることでその異なる解釈の間を静的に区別することができます。</p>
+<p>例えば、<code>f64</code>の値はマイルとキロメートルの何れかの量を示しているかもしれません。
+newtypeを使うことで、どちらが正しい解釈なのかを示すことが可能です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+struct Miles(pub f64);
+struct Kilometers(pub f64);
+
+impl Miles {
+    fn to_kilometers(self) -&gt; Kilometers { /* ... */ }
+}
+impl Kilometers {
+    fn to_miles(self) -&gt; Miles { /* ... */ }
+}
+#}</code></pre></pre>
+<p>このように型を分けることで、混ざってしまわないことを静的に保証できます。
+例えば、</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn are_we_there_yet(distance_travelled: Miles) -&gt; bool { /* ... */ }
+#}</code></pre></pre>
+<p>は間違って<code>Kilometers</code>の値で呼ばれることはありません。
+コンパイラが適切な変換を施すことを思い出させてくれるため、<a href="http://en.wikipedia.org/wiki/Mars_Climate_Orbiter">恐ろしいバグ</a>も回避できます。</p>
+<p><a id="c-custom-type"></a></p>
+<a class="header" href="print.html#boolやoptionの代わりに意味のある型を使っている-c-custom-type" id="boolやoptionの代わりに意味のある型を使っている-c-custom-type"><h2><code>bool</code>や<code>Option</code>の代わりに意味のある型を使っている (C-CUSTOM-TYPE)</h2></a>
+<p>こうして下さい。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let w = Widget::new(Small, Round)
+#}</code></pre></pre>
+<p>次は駄目な例です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let w = Widget::new(true, false)
+#}</code></pre></pre>
+<p><code>bool</code>や<code>u8</code>、<code>Option</code>のような汎用的な型には様々な解釈が考えられます。</p>
+<p>専用の型(列挙型、構造体、あるいはタプル)を用い、その意味と不変条件を伝えるようにしてください。
+上記の駄目な例では、引数の名前を調べない限り<code>true</code>と<code>false</code>がどういった意味なのか分かりません。
+<code>Small</code>や<code>Round</code>といった型を使った場合ではその意味が明確になっています。</p>
+<p>専用の型を使うことで今後の拡張も楽になります。上記の例で言うと、
+ここに<code>ExtraLarge</code>というバリアントを追加したりできますね。</p>
+<p>既存の型にゼロコストで区別された名前を付ける方法についてはnewtypeパターン(<a href="print.html#c-newtype">C-NEWTYPE</a>)を参照してください。</p>
+<p><a id="c-bitflag"></a></p>
+<a class="header" href="print.html#フラグの集合を列挙型ではなくbitflagsで表している-c-bitflag" id="フラグの集合を列挙型ではなくbitflagsで表している-c-bitflag"><h2>フラグの集合を列挙型ではなく<code>bitflags</code>で表している (C-BITFLAG)</h2></a>
+<p>Rustでは<code>enum</code>において値を明示することが可能です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+enum Color {
+    Red = 0xff0000,
+    Green = 0x00ff00,
+    Blue = 0x0000ff,
+}
+#}</code></pre></pre>
+<p>値の指定は他のシステムや言語向けに整数値としてシリアライゼーションしないといけない場合に便利です。
+数値でなく<code>Color</code>を関数が取れば、数値への変換が可能であると同時に不正な値の入力が防げるため
+「型安全性」に貢献します。</p>
+<p><code>enum</code>は複数の選択肢のうちの1つを要求するAPIに使われます。
+しかし、APIの入力がフラグの集合である場合もあります。
+C言語のコードでは各々のフラグを特定のビットに割当てることで、1つの整数値によって32あるいは64等のフラグを表せるようにします。
+Rustでは<a href="https://github.com/rust-lang-nursery/bitflags"><code>bitflags</code></a>クレートがこのパターンの型安全な実装を提供しています。</p>
+<pre><pre class="playpen"><code class="language-rust">#[macro_use]
+extern crate bitflags;
+
+bitflags! {
+    struct Flags: u32 {
+        const FLAG_A = 0b00000001;
+        const FLAG_B = 0b00000010;
+        const FLAG_C = 0b00000100;
+    }
+}
+
+fn f(settings: Flags) {
+    if settings.contains(FLAG_A) {
+        println!(&quot;doing thing A&quot;);
+    }
+    if settings.contains(FLAG_B) {
+        println!(&quot;doing thing B&quot;);
+    }
+    if settings.contains(FLAG_C) {
+        println!(&quot;doing thing C&quot;);
+    }
+}
+
+fn main() {
+    f(FLAG_A | FLAG_C);
+}
+</code></pre></pre>
+<p><a id="c-builder"></a></p>
+<a class="header" href="print.html#複雑な値の生成にビルダーパターンを使っている-c-builder" id="複雑な値の生成にビルダーパターンを使っている-c-builder"><h2>複雑な値の生成にビルダーパターンを使っている (C-BUILDER)</h2></a>
+<p>以下のような理由によって、データ構造の生成に複雑な手順が必要なことがあります。</p>
+<ul>
+<li>多数の入力がある</li>
+<li>複合的なデータである (例えばスライス)</li>
+<li>オプショナルな設定データがある</li>
+<li>選択肢が複数ある</li>
+</ul>
+<p>こんなとき、異なった引数をもつ多数のコンストラクタを追加してしまいがちです。</p>
+<p>そういったデータ構造<code>T</code>があるとき、<code>T</code>に <em>ビルダー</em> を用意することを検討してください。</p>
+<ol>
+<li>インクリメンタルに<code>T</code>を設定するための別のデータ型、<code>TBuilder</code>を作ります。
+可能であれば、より明瞭な名前を選んでください。例えば、<a href="https://doc.rust-lang.org/std/process/struct.Child.html">子プロセス</a>を作成するビルダーの
+<a href="https://doc.rust-lang.org/std/process/struct.Command.html"><code>Command</code></a>、<a href="https://docs.rs/url/1.4.0/url/struct.Url.html"><code>Url</code></a>を作成するビルダーの<a href="https://docs.rs/url/1.4.0/url/struct.ParseOptions.html"><code>ParseOptions</code></a>のようにです。</li>
+<li>ビルダー自体のコンストラクタは、<code>T</code>を生成するために <em>必須</em> のパラメータのみ取るべきです。</li>
+<li>ビルダーは設定を行うための便利なメソッドを提供するべきです。
+例えば、複合的なデータをインクリメンタルに設定できるようなものです。
+メソッドは<code>self</code>を返して、メソッドチェーンを行えるようにすべきです。</li>
+<li>ビルダーは実際に<code>T</code>の値を生成する「終端」メソッドを1つ以上提供すべきです。</li>
+</ol>
+<p>ビルダーパターンは特に、<code>T</code>の生成においてプロセスやタスクの立ち上げのような副作用が生じる場合にも適しています。</p>
+<p>Rustでのビルダーパターンの作り方には、所有権の取り扱いによって以下で示す2通りの方法があります。</p>
+<a class="header" href="print.html#非消費ビルダー-推奨" id="非消費ビルダー-推奨"><h3>非消費ビルダー (推奨)</h3></a>
+<p>最終的な<code>T</code>の生成にビルダー自身を必要としない場合があります。
+例として<a href="https://doc.rust-lang.org/std/process/struct.Command.html"><code>std::process::Command</code></a>を挙げます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// NOTE: 実際のCommand APIはStringを所有しません。
+// これは単純化されたバージョンです
+
+pub struct Command {
+    program: String,
+    args: Vec&lt;String&gt;,
+    cwd: Option&lt;String&gt;,
+    // etc
+}
+
+impl Command {
+    pub fn new(program: String) -&gt; Command {
+        Command {
+            program: program,
+            args: Vec::new(),
+            cwd: None,
+        }
+    }
+
+    /// Add an argument to pass to the program.
+    pub fn arg(&amp;mut self, arg: String) -&gt; &amp;mut Command {
+        self.args.push(arg);
+        self
+    }
+
+    /// Add multiple arguments to pass to the program.
+    pub fn args(&amp;mut self, args: &amp;[String]) -&gt; &amp;mut Command {
+        self.args.extend_from_slice(args);
+        self
+    }
+
+    /// Set the working directory for the child process.
+    pub fn current_dir(&amp;mut self, dir: String) -&gt; &amp;mut Command {
+        self.cwd = Some(dir);
+        self
+    }
+
+    /// Executes the command as a child process, which is returned.
+    pub fn spawn(&amp;self) -&gt; io::Result&lt;Child&gt; {
+        /* ... */
+    }
+}
+#}</code></pre></pre>
+<p>ビルダーの設定データを使って実際にプロセスを立ち上げる<code>spawn</code>メソッドが、
+ビルダーを不変参照で受け取っていることに注目してください。
+これはプロセスの立ち上げにビルダーの設定データの所有権が必要ないからです。</p>
+<p>終端メソッドである<code>spawn</code>が参照しか必要としないのですから、
+設定メソッドは<code>self</code>を参照で受け取り、返すべきです。</p>
+<a class="header" href="print.html#利点" id="利点"><h4>利点</h4></a>
+<p>借用を使うことで、<code>Command</code>はワンライナーでも、もっと複雑なことをする場合でも
+どちらにでも使うことができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// One-liners
+Command::new(&quot;/bin/cat&quot;).arg(&quot;file.txt&quot;).spawn();
+
+// Complex configuration
+let mut cmd = Command::new(&quot;/bin/ls&quot;);
+cmd.arg(&quot;.&quot;);
+if size_sorted {
+    cmd.arg(&quot;-S&quot;);
+}
+cmd.spawn();
+#}</code></pre></pre>
+<a class="header" href="print.html#消費ビルダー" id="消費ビルダー"><h3>消費ビルダー</h3></a>
+<p>ビルダーが<code>T</code>を生成する際に、所有権を移動しなければならない場合があります。
+つまり終端メソッドが<code>&amp;self</code>ではなく<code>self</code>を取るときです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl TaskBuilder {
+    /// Name the task-to-be.
+    pub fn named(mut self, name: String) -&gt; TaskBuilder {
+        self.name = Some(name);
+        self
+    }
+
+    /// Redirect task-local stdout.
+    pub fn stdout(mut self, stdout: Box&lt;io::Write + Send&gt;) -&gt; TaskBuilder {
+        self.stdout = Some(stdout);
+        self
+    }
+
+    /// Creates and executes a new child task.
+    pub fn spawn&lt;F&gt;(self, f: F) where F: FnOnce() + Send {
+        /* ... */
+    }
+}
+#}</code></pre></pre>
+<p>ここで、<code>stdout</code>を設定するときには<code>io::Write</code>を実装する型の所有権が渡されるため、
+タスクの生成を行う際にその所有権を移動する必要があります(<code>spawn</code>内)。</p>
+<p>ビルダーの終端メソッドが所有権を要求するとき、大きなトレードオフが存在します。</p>
+<ul>
+<li>
+<p>もし他のビルダーメソッドが可変借用を受け渡すと、
+前述した複雑な設定の場合は上手く動きますが、ワンライナーでの設定は不可能になります。</p>
+</li>
+<li>
+<p>もし他のビルダーメソッドが<code>self</code>の所有権を受け渡すと、
+ワンライナーはそのまま動きますが、複雑な設定を行う際には不便です。</p>
+</li>
+</ul>
+<p>簡単なものは簡単なまま保つべきですから、
+消費ビルダーのビルダーメソッドは全て<code>self</code>を取り、返すべきです。
+このビルダーを使用するコードは次のようになります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// One-liners
+TaskBuilder::new(&quot;my_task&quot;).spawn(|| { /* ... */ });
+
+// Complex configuration
+let mut task = TaskBuilder::new();
+task = task.named(&quot;my_task_2&quot;); // must re-assign to retain ownership
+if reroute {
+    task = task.stdout(mywriter);
+}
+task.spawn(|| { /* ... */ });
+#}</code></pre></pre>
+<p>所有権が<code>spawn</code>に消費されるまで各メソッド間で次々と受け渡され、ワンライナーは今までどおり動きます。
+一方で、複雑な設定は記述量が増えています。各メソッドを呼ぶ際に再束縛が必要になります。</p>
+<a class="header" href="print.html#信頼性" id="信頼性"><h1>信頼性</h1></a>
+<p><a id="c-validate"></a></p>
+<a class="header" href="print.html#関数が引数を検証している-c-validate" id="関数が引数を検証している-c-validate"><h2>関数が引数を検証している (C-VALIDATE)</h2></a>
+<p>RustでのAPIは「送るものに関しては厳密に、受け取るものに関しては寛容に」という<a href="http://en.wikipedia.org/wiki/Robustness_principle">堅牢性原則</a>には縛られません。</p>
+<p>代わりに、Rustコードは可能なかぎり入力の正しさを <em>検証</em> すべきです。</p>
+<p>この検証は、以下のようにして行うことができます(より推奨されるものの順に並んでいます)。</p>
+<a class="header" href="print.html#静的な検証" id="静的な検証"><h3>静的な検証</h3></a>
+<p>不正な値を受け付けないよう引数の型を選んでください。</p>
+<p>例えば次のようにします。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo(a: Ascii) { /* ... */ }
+#}</code></pre></pre>
+<p>このようにしてはいけません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo(a: u8) { /* ... */ }
+#}</code></pre></pre>
+<p>ここで<code>Ascii</code>は<code>u8</code>の <em>ラッパ</em> であり、最上位ビットがゼロであることを保証します。
+型安全なラッパを作る方法はnewtypeパターン(<a href="type-safety.html#c-newtype">C-NEWTYPE</a>)を参照してください。</p>
+<p>静的な検証は型の境界にコストを押し込む(例えば、<code>u8</code>は<code>Ascii</code>に変換しなければ受け付けない)ため、
+実行時コストが掛かることは余りありません。 また、実行時ではなくコンパイル中にバグが検出されます。</p>
+<p>一方、型を用いて表すことが困難あるいは不可能な特性も存在します。</p>
+<a class="header" href="print.html#動的な検証" id="動的な検証"><h3>動的な検証</h3></a>
+<p>入力を処理と同時に(あるいは必要ならば事前に)検証します。
+動的な検証は静的な検証よりも実装が簡単ですが、いくつかの欠点があります。</p>
+<ol>
+<li>実行時コスト (処理と検証を同時に行うことができない場合)</li>
+<li>バグの検出が遅れます</li>
+<li>パニックや<code>Result</code>/<code>Option</code>型による失敗ケースを呼び出し側のコードで処理しなければなりません</li>
+</ol>
+<a class="header" href="print.html#debug_assertによる動的な検証" id="debug_assertによる動的な検証"><h4><code>debug_assert!</code>による動的な検証</h4></a>
+<p>プロダクションビルドにおいて高コストな検証を行わないようにできるかもしれません。</p>
+<a class="header" href="print.html#動的な検証のオプトアウト" id="動的な検証のオプトアウト"><h4>動的な検証のオプトアウト</h4></a>
+<p>チェックを行わないバージョンの関数を追加します。</p>
+<p>チェックを行わない関数の名前の後ろに<code>_unchecked</code>と付けたり、<code>raw</code>という名前のモジュールに置かれたりするのが一般的です。</p>
+<p>チェックを行わない関数は(1)パフォーマンスがチェックよりも優先される場合
+(2)入力が正しいと呼び出し側が確信している場合に使うことができます。</p>
+<p><a id="c-dtor-fail"></a></p>
+<a class="header" href="print.html#デストラクタが失敗しない-c-dtor-fail" id="デストラクタが失敗しない-c-dtor-fail"><h2>デストラクタが失敗しない (C-DTOR-FAIL)</h2></a>
+<p>デストラクタはパニック時にも実行されますが、その際にさらにデストラクタ内でパニックすると
+プログラムは強制終了します。</p>
+<p>デストラクタでパニックする代わりに、<code>Result</code>を返して失敗を通知する<code>close</code>メソッドのような、
+失敗を確認することのできる破棄メソッドを追加してください。</p>
+<p><a id="c-dtor-block"></a></p>
+<a class="header" href="print.html#ブロックする可能性のあるデストラクタには代替手段を用意する-c-dtor-block" id="ブロックする可能性のあるデストラクタには代替手段を用意する-c-dtor-block"><h2>ブロックする可能性のあるデストラクタには代替手段を用意する (C-DTOR-BLOCK)</h2></a>
+<p>デバッグが難しくなるため、デストラクタでブロックするような操作を行うべきではありません。
+ブロックせずに破棄を行える別のメソッドを追加するべきです。</p>
+<a class="header" href="print.html#デバッガビリティ" id="デバッガビリティ"><h1>デバッガビリティ</h1></a>
+<p><a id="c-debug"></a></p>
+<a class="header" href="print.html#全てのパブリックな型にdebugを実装する-c-debug" id="全てのパブリックな型にdebugを実装する-c-debug"><h2>全てのパブリックな型に<code>Debug</code>を実装する (C-DEBUG)</h2></a>
+<p>例外が必要なことは稀なはずです。</p>
+<p><a id="c-debug-nonempty"></a></p>
+<a class="header" href="print.html#debug表現を空にしない-c-debug-nonempty" id="debug表現を空にしない-c-debug-nonempty"><h2><code>Debug</code>表現を空にしない (C-DEBUG-NONEMPTY)</h2></a>
+<p><code>Debug</code>表現は空にするべきではありません。概念的に空である値に対しても同様です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let empty_str = &quot;&quot;;
+assert_eq!(format!(&quot;{:?}&quot;, empty_str), &quot;\&quot;\&quot;&quot;);
+
+let empty_vec = Vec::&lt;bool&gt;::new();
+assert_eq!(format!(&quot;{:?}&quot;, empty_vec), &quot;[]&quot;);
+#}</code></pre></pre>
+<a class="header" href="print.html#将来性" id="将来性"><h1>将来性</h1></a>
+<p><a id="c-sealed"></a></p>
+<a class="header" href="print.html#sealedトレイトを使って下流の実装を適切に防いでいる-c-sealed" id="sealedトレイトを使って下流の実装を適切に防いでいる-c-sealed"><h2>sealedトレイトを使って下流の実装を適切に防いでいる (C-SEALED)</h2></a>
+<p>そのクレート内でのみ実装されることを想定したトレイトについて、
+sealedトレイトパターンを用いることでユーザのコードを壊すことなしに変更を加えることが可能になります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+/// このトレイトはsealされているため、他のクレートで実装を追加することはできません。
+pub trait TheTrait: private::Sealed {
+    // メソッド
+    fn ...();
+
+    // ユーザが呼ぶべきでないプライベートメソッド
+    #[doc(hidden)]
+    fn ...();
+}
+
+// 実装
+impl TheTrait for usize {
+    /* ... */
+}
+
+mod private {
+    pub trait Sealed {}
+
+    // 同じ型に実装
+    impl Sealed for usize {}
+}
+#}</code></pre></pre>
+<p>プライベートな空の<code>Sealed</code>親トレイトを下流のクレートから参照することはできません。
+従って、<code>Sealed</code>(そして<code>TheTrait</code>)の実装はこのクレート内にのみ存在できます。
+トレイトにメソッドを追加することは一般的に破壊的変更となりますが、
+sealedトレイトである<code>TheTrait</code>にメソッドを追加することは破壊的変更になりません。
+また、ドキュメントに掲載されていないメソッドの定義も自由に変更することができます。</p>
+<p>sealedトレイトからパブリックなメソッドを取り除いたり、
+定義を変更したりすることは依然として破壊的変更であることに注意してください。</p>
+<p>混乱したユーザがそれらのトレイトを実装しようとすることを防ぐため、
+そのトレイトはsealされており、他のクレートから実装されるべきものではないことを
+ドキュメントに記載しておくべきです。</p>
+<a class="header" href="print.html#例-2" id="例-2"><h3>例</h3></a>
+<ul>
+<li><a href="https://docs.serde.rs/serde_json/value/trait.Index.html"><code>serde_json::value::Index</code></a></li>
+<li><a href="https://docs.rs/byteorder/1.1.0/byteorder/trait.ByteOrder.html"><code>byteorder::ByteOrder</code></a></li>
+</ul>
+<p><a id="c-struct-private"></a></p>
+<a class="header" href="print.html#構造体のフィールドを適切にプライベートにする-c-struct-private" id="構造体のフィールドを適切にプライベートにする-c-struct-private"><h2>構造体のフィールドを適切にプライベートにする (C-STRUCT-PRIVATE)</h2></a>
+<p>構造体のフィールドをパブリックにすることには重大な責任が伴います。
+表現を変更することはできなくなり、またユーザはフィールドを自由に弄ることができるため
+値のバリデーションや不変条件の検証などができなくなります。</p>
+<p>パブリックなフィールドはC言語的な意味あいの<code>sturct</code>、すなわち複合化された受け身のデータ構造には最適ですが、
+それ以外ではgetter/setterメソッドを用意しフィールドを隠蔽することを考慮してください。</p>
+<p><a id="c-newtype-hide"></a></p>
+<a class="header" href="print.html#newtypeを用いて実装詳細を隠蔽している-c-newtype-hide" id="newtypeを用いて実装詳細を隠蔽している-c-newtype-hide"><h2>newtypeを用いて実装詳細を隠蔽している (C-NEWTYPE-HIDE)</h2></a>
+<p>newtypeはユーザへの保証を保ちつつ実装詳細を隠蔽するために役立ちます。</p>
+<p>例としてこの、イテレータ型を返す<code>my_transform</code>関数を見てください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+use std::iter::{Enumerate, Skip};
+
+pub fn my_transform&lt;I: Iterator&gt;(input: I) -&gt; Enumerate&lt;Skip&lt;I&gt;&gt; {
+    input.skip(3).enumerate()
+}
+#}</code></pre></pre>
+<p>ユーザから見た際に<code>Iterator&lt;Item = (usize, T)&gt;</code>のように見えるよう型を隠したいときは、
+newtype型を使うことができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+use std::iter::{Enumerate, Skip};
+
+pub struct MyTransformResult&lt;I&gt;(Enumerate&lt;Skip&lt;I&gt;&gt;);
+
+impl&lt;I: Iterator&gt; Iterator for MyTransformResult&lt;I&gt; {
+    type Item = (usize, I::Item);
+
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        self.0.next()
+    }
+}
+
+pub fn my_transform&lt;I: Iterator&gt;(input: I) -&gt; MyTransformResult&lt;I&gt; {
+    MyTransformResult(input.skip(3).enumerate())
+}
+#}</code></pre></pre>
+<p>これにより宣言が簡単になるだけでなく、ユーザへの保証を小さくすることができます。
+ユーザは返されたイテレータがどのように生成されたのか、どのような内部表現になっているのかを知ることができません。
+したがって、ユーザのコードを壊すこと無く将来的に内部表現を変更できるようになります。</p>
+<p><a href="https://github.com/rust-lang/rfcs/blob/master/text/1522-conservative-impl-trait.md"><code>impl Trait</code></a>は現在のところunstableですが、将来的にはこれを用いても同じことが達成できるようになります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![feature(conservative_impl_trait)]
+
+#fn main() {
+pub fn my_transform&lt;I: Iterator&gt;(input: I) -&gt; impl Iterator&lt;Item = (usize, I::Item)&gt; {
+    input.skip(3).enumerate()
+}
+#}</code></pre></pre>
+<p><a id="c-struct-bounds"></a></p>
+<a class="header" href="print.html#データ構造にderiveしたトレイトの境界を定義で繰り返さない-c-struct-bounds" id="データ構造にderiveしたトレイトの境界を定義で繰り返さない-c-struct-bounds"><h2>データ構造にderiveしたトレイトの境界を定義で繰り返さない (C-STRUCT-BOUNDS)</h2></a>
+<p>ジェネリックなデータ構造はderiveしたトレイト境界をその定義において繰り返すべきではありません。
+<code>derive</code>属性によって実装されたトレイトは、ジェネリック型がそのトレイトを実装している場合のみ実装される
+個別の<code>impl</code>ブロックに展開されます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 良い例:
+#[derive(Clone, Debug, PartialEq)]
+struct Good&lt;T&gt; { /* ... */ }
+
+// 悪い例:
+#[derive(Clone, Debug, PartialEq)]
+struct Bad&lt;T: Clone + Debug + PartialEq&gt; { /* ... */ }
+#}</code></pre></pre>
+<p><code>Bad</code>のようにderiveしたトレイトを境界として繰り返すのは不要であり、
+しかも後方互換性を保つ上で困難となります。
+なぜなら、ここで<code>PartialOrd</code>をderiveした場合を考えてみて下さい。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 非破壊的変更:
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+struct Good&lt;T&gt; { /* ... */ }
+
+// 破壊的変更:
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+struct Bad&lt;T: Clone + Debug + PartialEq + PartialOrd&gt; { /* ... */ }
+#}</code></pre></pre>
+<p>一般的に、データ構造にトレイト境界を追加すると全ての利用箇所において追加の境界を満たす必要が発生するため、
+破壊的変更となります。
+しかし、<code>derive</code>属性を用いて標準ライブラリのトレイトを実装することは破壊的変更となりません。</p>
+<p>以下のトレイトはデータ構造において境界とするべきではありません。</p>
+<ul>
+<li><code>Clone</code></li>
+<li><code>PartialEq</code></li>
+<li><code>PartialOrd</code></li>
+<li><code>Debug</code></li>
+<li><code>Display</code></li>
+<li><code>Default</code></li>
+<li><code>Serialize</code></li>
+<li><code>Deserialize</code></li>
+<li><code>DeserializeOwned</code></li>
+</ul>
+<p><code>Read</code>や<code>Write</code>のようなderiveできないトレイトの中には、
+厳密にはデータ構造によって要求されないグレーゾーンのものが存在します。
+これらは型のふるまいを伝える役に立つ可能性がありますが、一方で将来的な拡張性の障害にもなります。
+しかし、deriveできるトレイトを境界に追加するよりは問題が少ないでしょう。</p>
+<a class="header" href="print.html#例外" id="例外"><h3>例外</h3></a>
+<p>データ構造にトレイト境界が必要となる、3つの例外があります。</p>
+<ol>
+<li>データ構造がトレイトの関連型を参照している。</li>
+<li><code>?Sized</code>境界。</li>
+<li>データ構造がそのトレイト境界を必要とする<code>Drop</code>実装を持っている。Rustは現在、
+<code>Drop</code>実装の境界がデータ構造自身にもすることを要求します。</li>
+</ol>
+<a class="header" href="print.html#標準ライブラリでの例-10" id="標準ライブラリでの例-10"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/borrow/enum.Cow.html"><code>std::borrow::Cow</code></a>は<code>Borrow</code>トレイトの関連型を参照しています。</li>
+<li><a href="https://doc.rust-lang.org/std/boxed/struct.Box.html"><code>std::boxed::Box</code></a>は暗黙の<code>Sized</code>境界を除いています。</li>
+<li><a href="https://doc.rust-lang.org/std/io/struct.BufWriter.html"><code>std::io::BufWriter</code></a>は<code>Drop</code>実装に必要である境界を型に要求します。</li>
+</ul>
+<a class="header" href="print.html#必要事項" id="必要事項"><h1>必要事項</h1></a>
+<p><a id="c-stable"></a></p>
+<a class="header" href="print.html#stableなクレートのパブリックな依存クレートがstableである-c-stable" id="stableなクレートのパブリックな依存クレートがstableである-c-stable"><h2>stableなクレートのパブリックな依存クレートがstableである (C-STABLE)</h2></a>
+<p>全てのパブリックな依存クレートがstable(&gt;=1.0.0)とならない限り、クレートをstableにすることはできません。</p>
+<p>パブリックな依存性は、依存先に由来する型がそのクレートのパブリックなAPIに使われているものです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn do_my_thing(arg: other_crate::TheirThing) { /* ... */ }
+#}</code></pre></pre>
+<p>この関数を含むクレートは、<code>other_crate</code>がstableにならない限りstableになりません。</p>
+<p>パブリックな依存制は思わぬ所に潜んでいることがあるため、注意が必要です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub struct Error {
+    private: ErrorImpl,
+}
+
+enum ErrorImpl {
+    Io(io::Error),
+    // ErrorImplはプライベートなので、other_crateがstableでなくても問題ないはず。
+    Dep(other_crate::Error),
+}
+
+// いや、ここでother_crateをパブリックなAPIの一部にしてしまっている。
+impl From&lt;other_crate::Error&gt; for Error {
+    fn from(err: other_crate::Error) -&gt; Self {
+        Error { private: ErrorImpl::Dep(err) }
+    }
+}
+#}</code></pre></pre>
+<p><a id="c-permissive"></a></p>
+<a class="header" href="print.html#クレートとその依存先がpermissiveなライセンスの下にある-c-permissive" id="クレートとその依存先がpermissiveなライセンスの下にある-c-permissive"><h2>クレートとその依存先がpermissiveなライセンスの下にある (C-PERMISSIVE)</h2></a>
+<p>Rustプロジェクトによって公開されているソフトウェアは<a href="https://github.com/rust-lang/rust/blob/master/LICENSE-MIT">MIT</a>と<a href="https://github.com/rust-lang/rust/blob/master/LICENSE-APACHE">Apache 2.0</a>
+のデュアルライセンス下にあります。
+Rustエコシステムとの最大の協調性が必要なクレートは同じようにするべきです。
+その他の選択肢も以下に提示します。</p>
+<p>Rustのライセンスに関しては<a href="https://www.rust-lang.org/en-US/faq.html#why-a-dual-mit-asl2-license">Rust FAQ</a>で幾分かの言及がなされていますが、
+このAPIガイドラインでは詳しい説明は行いません。
+これはライセンスに関する解説ではなく、Rustとの協調性に関するガイドラインだからです。</p>
+<p>Rustと同等のライセンスをあなたのプロジェクトに適用したい場合、次のように
+<code>Cargo.toml</code>中の<code>license</code>フィールドを設定してください。</p>
+<pre><code class="language-toml">[package]
+name = &quot;...&quot;
+version = &quot;...&quot;
+authors = [&quot;...&quot;]
+license = &quot;MIT/Apache-2.0&quot;
+</code></pre>
+<p>そして、README.mdの最後に以下を追加してください。</p>
+<pre><code>## License
+
+Licensed under either of
+
+ * Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
+</code></pre>
+<p>MIT/Apache-2.0のデュアルライセンスの他に、Rustのクレート開発者によってよく使われるのは
+MITやBSDのようなpermissiveなライセンスを単体で利用することです。
+このやり方でも、小さな制約が加わってしまうだけでRustとの互換性はあります。</p>
+<p>Rustとの完全なライセンス互換性が必要なら、Apacheライセンス単体を用いることは推奨されません。
+Apacheライセンスはpermissiveではありますが、MITやBSDより大きな制約を課しているため、
+デュアルライセンスのRust本体は使うことができるにも関わらず
+Apacheライセンスのみのソフトウェアを使うことのできない状況が存在するからです。</p>
+<p>クレートの依存先のライセンスはクレート自身の配布にも制約を与える可能性があるため、
+permissiveなライセンスのクレートはpermissiveなライセンスのクレートにのみ依存するべきです。</p>
+<a class="header" href="print.html#外部リンク" id="外部リンク"><h1>外部リンク</h1></a>
+<ul>
+<li><a href="https://github.com/rust-lang/rfcs/blob/master/text/0199-ownership-variants.md">RFC 199</a> - Ownership naming conventions</li>
+<li><a href="https://github.com/rust-lang/rfcs/blob/master/text/0344-conventions-galore.md">RFC 344</a> - Naming conventions</li>
+<li><a href="https://github.com/rust-lang/rfcs/blob/master/text/0430-finalizing-naming-conventions.md">RFC 430</a> - Naming conventions</li>
+<li><a href="https://github.com/rust-lang/rfcs/blob/master/text/0505-api-comment-conventions.md">RFC 505</a> - Doc conventions</li>
+<li><a href="https://github.com/rust-lang/rfcs/blob/master/text/1574-more-api-documentation-conventions.md">RFC 1574</a> - Doc conventions</li>
+<li><a href="https://github.com/rust-lang/rfcs/pull/1687">RFC 1687</a> - Crate-level documentation</li>
+<li><a href="https://deterministic.space/elegant-apis-in-rust.html">Elegant Library APIs in Rust</a></li>
+<li><a href="https://github.com/rust-unofficial/patterns">Rust Design Patterns</a></li>
+</ul>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+
+                
+
+            </div>
+
+            
+
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+        <script>
+            $(document).ready(function() {
+                window.print();
+            })
+        </script>
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

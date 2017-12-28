@@ -1,0 +1,258 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>チェックリスト - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html" class="active">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="checklist.html#rust-api-guidelines-checklist" id="rust-api-guidelines-checklist"><h1>Rust API Guidelines Checklist</h1></a>
+<!-- Read CONTRIBUTING.md before writing new guidelines -->
+<ul>
+<li><strong>命名</strong> <em>(クレートがRustの慣用的な命名規則に従っている)</em>
+<ul>
+<li><input type="checkbox"/> 大文字・小文字の使い分けがRFC430に従っている (<a href="naming.html#c-case">C-CASE</a>)</li>
+<li><input type="checkbox"/> 変換メソッドに<code>as_</code>, <code>to_</code>, <code>into_</code>を使っている (<a href="naming.html#c-conv">C-CONV</a>)</li>
+<li><input type="checkbox"/> Getterの名前がRustの規則に従っている (<a href="naming.html#c-getter">C-GETTER</a>)</li>
+<li><input type="checkbox"/> イテレータを生成するメソッドの名前が<code>iter</code>, <code>iter_mut</code>, <code>into_iter</code>となっている (<a href="naming.html#c-iter">C-ITER</a>)</li>
+<li><input type="checkbox"/> イテレータの型名が、それを生成するメソッドと揃っている (<a href="naming.html#c-iter-ty">C-ITER-TY</a>)</li>
+<li><input type="checkbox"/> Featureの名前に余計な単語が入っていない (<a href="naming.html#c-feature">C-FEATURE</a>)</li>
+<li><input type="checkbox"/> 命名時に単語を並べる順番が揃っている (<a href="naming.html#c-word-order">C-WORD-ORDER</a>)</li>
+</ul>
+</li>
+<li><strong>相互運用性</strong> <em>(クレートが他のクレートの機能とうまく連携できる)</em>
+<ul>
+<li><input type="checkbox"/> 積極的に一般的なトレイトを型に実装している (<a href="interoperability.html#c-common-traits">C-COMMON-TRAITS</a>)
+<ul>
+<li><code>Copy</code>, <code>Clone</code>, <code>Eq</code>, <code>PartialEq</code>, <code>Ord</code>, <code>PartialOrd</code>, <code>Hash</code>, <code>Debug</code>,
+<code>Display</code>, <code>Default</code></li>
+</ul>
+</li>
+<li><input type="checkbox"/> 変換に標準のトレイト<code>From</code>, <code>AsRef</code>, <code>AsMut</code>を用いている (<a href="interoperability.html#c-conv-traits">C-CONV-TRAITS</a>)</li>
+<li><input type="checkbox"/> コレクションが<code>FromIterator</code>と<code>Extend</code>を実装している (<a href="interoperability.html#c-collect">C-COLLECT</a>)</li>
+<li><input type="checkbox"/> データ構造がSerdeの<code>Serialize</code>と<code>Deserialize</code>を実装している (<a href="interoperability.html#c-serde">C-SERDE</a>)</li>
+<li><input type="checkbox"/> 型が可能な限り<code>Send</code>,<code>Sync</code>である (<a href="interoperability.html#c-send-sync">C-SEND-SYNC</a>)</li>
+<li><input type="checkbox"/> エラー型の意味が分かりやすく、行儀の良い実装となっている (<a href="interoperability.html#c-good-err">C-GOOD-ERR</a>)</li>
+<li><input type="checkbox"/> バイナリ数値型が<code>Hex</code>, <code>Octal</code>, <code>Binary</code>によるフォーマットをサポートしている (<a href="interoperability.html#c-num-fmt">C-NUM-FMT</a>)</li>
+<li><input type="checkbox"/> 読み書きを行うジェネリックな関数が<code>R: Read</code>と<code>W: Write</code>を値渡しで受け取っている (<a href="interoperability.html#c-rw-value">C-RW-VALUE</a>)</li>
+</ul>
+</li>
+<li><strong>マクロ</strong> <em>(クレートが行儀のよいマクロを提供している)</em>
+<ul>
+<li><input type="checkbox"/> 入力の構文から結果をイメージできるようになっている (<a href="macros.html#c-evocative">C-EVOCATIVE</a>)</li>
+<li><input type="checkbox"/> アイテムを宣言するマクロが属性と衝突しない (<a href="macros.html#c-macro-attr">C-MACRO-ATTR</a>)</li>
+<li><input type="checkbox"/> アイテムを宣言するマクロがアイテムを宣言できる場所のどこでも使える (<a href="macros.html#c-anywhere">C-ANYWHERE</a>)</li>
+<li><input type="checkbox"/> アイテムを宣言するマクロが可視性の指定をサポートしている (<a href="macros.html#c-macro-vis">C-MACRO-VIS</a>)</li>
+<li><input type="checkbox"/> 型の指定が柔軟である (<a href="macros.html#c-macro-ty">C-MACRO-TY</a>)</li>
+</ul>
+</li>
+<li><strong>ドキュメンテーション</strong> <em>(クレートに十分なドキュメントが付けられている)</em>
+<ul>
+<li><input type="checkbox"/> クレートレベルにコード例付きの詳細なドキュメントがある (<a href="documentation.html#c-crate-doc">C-CRATE-DOC</a>)</li>
+<li><input type="checkbox"/> 全てのアイテムにコード例が付いている (<a href="documentation.html#c-example">C-EXAMPLE</a>)</li>
+<li><input type="checkbox"/> コード例が<code>try!</code>や<code>unwrap</code>ではなく<code>?</code>を使っている (<a href="documentation.html#c-question-mark">C-QUESTION-MARK</a>)</li>
+<li><input type="checkbox"/> 関数のドキュメントにエラー、パニック、安全性に関する事項が含まれている (<a href="documentation.html#c-failure">C-FAILURE</a>)</li>
+<li><input type="checkbox"/> 文章に関係する項目へのリンクを含める (<a href="documentation.html#c-link">C-LINK</a>)</li>
+<li><input type="checkbox"/> Cargo.tomlが一般的なメタデータを全て含んでいる (<a href="documentation.html#c-metadata">C-METADATA</a>)
+<ul>
+<li>authors, description, license, homepage, documentation, repository,
+readme, keywords, categories</li>
+</ul>
+</li>
+<li><input type="checkbox"/> html_root_url属性が&quot;https://docs.rs/CRATE/X.Y.Z&quot;に設定されている (<a href="documentation.html#c-html-root">C-HTML-ROOT</a>)</li>
+<li><input type="checkbox"/> 大きな変更が全てリリースノートに記載されている (<a href="documentation.html#c-relnotes">C-RELNOTES</a>)</li>
+<li><input type="checkbox"/> 無用な実装詳細がRustdocに表示されていない (<a href="documentation.html#c-hidden">C-HIDDEN</a>)</li>
+</ul>
+</li>
+<li><strong>予測性</strong> <em>(クレートを使い、見かけ通りに動作する読みやすいコードが書ける)</em>
+<ul>
+<li><input type="checkbox"/> スマートポインタがinherentメソッドを持っていない (<a href="predictability.html#c-smart-ptr">C-SMART-PTR</a>)</li>
+<li><input type="checkbox"/> 変換メソッドが最も関係の深い型に付いている (<a href="predictability.html#c-conv-specific">C-CONV-SPECIFIC</a>)</li>
+<li><input type="checkbox"/> 明確なレシーバを持つ関数がメソッドになっている (<a href="predictability.html#c-method">C-METHOD</a>)</li>
+<li><input type="checkbox"/> 関数がoutパラメータを持たない (<a href="predictability.html#c-no-out">C-NO-OUT</a>)</li>
+<li><input type="checkbox"/> 奇妙な演算子オーバーロードを行っていない (<a href="predictability.html#c-overload">C-OVERLOAD</a>)</li>
+<li><input type="checkbox"/> <code>Deref</code>と<code>DerefMut</code>を実装しているのはスマートポインタだけである (<a href="predictability.html#c-deref">C-DEREF</a>)</li>
+<li><input type="checkbox"/> コンストラクタはスタティックなinherentメソッドである (<a href="predictability.html#c-ctor">C-CTOR</a>)</li>
+</ul>
+</li>
+<li><strong>柔軟性</strong> <em>(クレートが実用的なユースケースを幅広くカバーしている)</em>
+<ul>
+<li><input type="checkbox"/> 重複した処理を行わなくて済むように中間生成物を公開している (<a href="flexibility.html#c-intermediate">C-INTERMEDIATE</a>)</li>
+<li><input type="checkbox"/> 呼び出し側がデータをコピーするタイミングを決める (<a href="flexibility.html#c-caller-control">C-CALLER-CONTROL</a>)</li>
+<li><input type="checkbox"/> ジェネリクスを用いて関数の引数に対する制限を最小にしている (<a href="flexibility.html#c-generic">C-GENERIC</a>)</li>
+<li><input type="checkbox"/> トレイトオブジェクトとして有用なトレイトはオブジェクトセーフになっている (<a href="flexibility.html#c-object">C-OBJECT</a>)</li>
+</ul>
+</li>
+<li><strong>型安全性</strong> <em>(クレートが型システムを有効に活用している)</em>
+<ul>
+<li><input type="checkbox"/> newtypeを使って静的に値を区別する (<a href="type-safety.html#c-newtype">C-NEWTYPE</a>)</li>
+<li><input type="checkbox"/> <code>bool</code>や<code>Option</code>の代わりに意味のある型を使っている (<a href="type-safety.html#c-custom-type">C-CUSTOM-TYPE</a>)</li>
+<li><input type="checkbox"/> フラグの集合を列挙型ではなく<code>bitflags</code>で表している (<a href="type-safety.html#c-bitflag">C-BITFLAG</a>)</li>
+<li><input type="checkbox"/> 複雑な値の生成にビルダーパターンを使っている (<a href="type-safety.html#c-builder">C-BUILDER</a>)</li>
+</ul>
+</li>
+<li><strong>信頼性</strong> <em>(クレートが間違ったことをしない)</em>
+<ul>
+<li><input type="checkbox"/> 関数が引数を検証している (<a href="dependability.html#c-validate">C-VALIDATE</a>)</li>
+<li><input type="checkbox"/> デストラクタが失敗しない (<a href="dependability.html#c-dtor-fail">C-DTOR-FAIL</a>)</li>
+<li><input type="checkbox"/> ブロックする可能性のあるデストラクタには代替手段を用意する (<a href="dependability.html#c-dtor-block">C-DTOR-BLOCK</a>)</li>
+</ul>
+</li>
+<li><strong>デバッガビリティ</strong> <em>(クレートが容易なデバッグを支援している)</em>
+<ul>
+<li><input type="checkbox"/> 全てのパブリックな型に<code>Debug</code>を実装する (<a href="debuggability.html#c-debug">C-DEBUG</a>)</li>
+<li><input type="checkbox"/> <code>Debug</code>表現を空にしない (<a href="debuggability.html#c-debug-nonempty">C-DEBUG-NONEMPTY</a>)</li>
+</ul>
+</li>
+<li><strong>将来性</strong> <em>(クレートを、ユーザのコードを壊すことなく改善できる)</em>
+<ul>
+<li><input type="checkbox"/> sealedトレイトを使って下流の実装を適切に防いでいる (<a href="future-proofing.html#c-sealed">C-SEALED</a>)</li>
+<li><input type="checkbox"/> 構造体のフィールドを適切にプライベートにする (<a href="future-proofing.html#c-struct-private">C-STRUCT-PRIVATE</a>)</li>
+<li><input type="checkbox"/> newtypeを用いて実装詳細を隠蔽している (<a href="future-proofing.html#c-newtype-hide">C-NEWTYPE-HIDE</a>)</li>
+<li><input type="checkbox"/> データ構造にderiveしたトレイトの境界を定義で繰り返さない (<a href="future-proofing.html#c-struct-bounds">C-STRUCT-BOUNDS</a>)</li>
+</ul>
+</li>
+<li><strong>必要事項</strong> <em>(ある状況下では重要な問題)</em>
+<ul>
+<li><input type="checkbox"/> stableなクレートのパブリックな依存クレートがstableである (<a href="necessities.html#c-stable">C-STABLE</a>)</li>
+<li><input type="checkbox"/> クレートとその依存先がpermissiveなライセンスの下にある (<a href="necessities.html#c-permissive">C-PERMISSIVE</a>)</li>
+</ul>
+</li>
+</ul>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="about.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="naming.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="about.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="naming.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

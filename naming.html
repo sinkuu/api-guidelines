@@ -1,0 +1,382 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>命名 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html" class="active"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="naming.html#命名" id="命名"><h1>命名</h1></a>
+<p><a id="c-case"></a></p>
+<a class="header" href="naming.html#大文字小文字の使い分けがrfc430に従っている-c-case" id="大文字小文字の使い分けがrfc430に従っている-c-case"><h2>大文字・小文字の使い分けがRFC430に従っている (C-CASE)</h2></a>
+<p>Rustにおける基本的な命名規則は<a href="https://github.com/rust-lang/rfcs/blob/master/text/0430-finalizing-naming-conventions.md">RFC 430</a>に記述されています。</p>
+<p>Rustは「型レベル」のもの(型やトレイト)に<code>CamelCase</code>、
+「値レベル」のものに<code>snake_case</code>を使用する傾向があります。
+正確には、次表のように命名します。</p>
+<table><thead><tr><th> アイテム </th><th> 規則 </th></tr></thead><tbody>
+<tr><td> クレート </td><td> <a href="https://github.com/rust-lang-nursery/api-guidelines/issues/29">不明</a> </td></tr>
+<tr><td> モジュール </td><td> <code>snake_case</code> </td></tr>
+<tr><td> 型 </td><td> <code>CamelCase</code> </td></tr>
+<tr><td> トレイト </td><td> <code>CamelCase</code> </td></tr>
+<tr><td> Enumのバリアント </td><td> <code>CamelCase</code> </td></tr>
+<tr><td> 関数 </td><td> <code>snake_case</code> </td></tr>
+<tr><td> メソッド </td><td> <code>snake_case</code> </td></tr>
+<tr><td> 一般のコンストラクタ </td><td> <code>new</code> または <code>with_more_details</code> </td></tr>
+<tr><td> 変換を行うコンストラクタ </td><td> <code>from_some_other_type</code> </td></tr>
+<tr><td> マクロ </td><td> <code>snake_case!</code> </td></tr>
+<tr><td> ローカル変数 </td><td> <code>snake_case</code> </td></tr>
+<tr><td> スタティック変数 </td><td> <code>SCREAMING_SNAKE_CASE</code> </td></tr>
+<tr><td> 定数 </td><td> <code>SCREAMING_SNAKE_CASE</code> </td></tr>
+<tr><td> 型パラメータ </td><td> 簡潔な<code>CamelCase</code>、大抵は大文字で1文字: <code>T</code> </td></tr>
+<tr><td> ライフタイム </td><td> 短い<code>lowercase</code>、大抵は1文字: <code>'a</code>, <code>'de</code>, <code>'src</code> </td></tr>
+<tr><td> Feature </td><td> <a href="https://github.com/rust-lang-nursery/api-guidelines/issues/101">不明</a>、ただし<a href="naming.html#c-feature">C-FEATURE</a>を参照 </td></tr>
+</tbody></table>
+<p>頭字語や複合語は、<code>CamelCase</code>では一語に数えます。例えば<code>UUID</code>ではなく<code>Uuid</code>を使い、<code>USize</code>ではなく<code>Usize</code>、<code>StdIn</code>ではなく<code>Stdin</code>を使って下さい。
+<code>snake_case</code>では<code>is_xid_start</code>のように小文字にします。</p>
+<p><code>snake_case</code>または<code>SCREAMING_SNAKE_CASE</code>では、
+それが最後の文字を除いて一文字で区切ってはいけません。
+例えば、<code>b_tree_map</code>ではなく<code>btree_map</code>としますが、<code>PI2</code>ではなく<code>PI_2</code>とします。</p>
+<p>クレート名の前後に<code>-rs</code>や<code>-rust</code>を付けるべきではありません。
+全てのクレートがRust製であることは分かりきっています!
+そのことをユーザに常に知らせ続ける必要はありません。
+(訳注: レポジトリ名等ではなく、Cargo.tomlで指定するクレート名についての指針です)</p>
+<a class="header" href="naming.html#標準ライブラリでの例" id="標準ライブラリでの例"><h3>標準ライブラリでの例</h3></a>
+<p>この規則は標準ライブラリの全体に渡って使用されています。</p>
+<p><a id="c-conv"></a></p>
+<a class="header" href="naming.html#変換メソッドにas_-to_-into_を使っている-c-conv" id="変換メソッドにas_-to_-into_を使っている-c-conv"><h2>変換メソッドに<code>as_</code>, <code>to_</code>, <code>into_</code>を使っている (C-CONV)</h2></a>
+<p>変換メソッドの名前には次のプレフィクスを付けるべきです。</p>
+<table><thead><tr><th> プレフィクス </th><th> コスト </th><th> 所有権 </th></tr></thead><tbody>
+<tr><td> <code>as_</code> </td><td> 低い </td><td> 借用 -&gt; 借用 </td></tr>
+<tr><td> <code>to_</code> </td><td> 高い </td><td> 借用 -&gt; 借用<br>借用 -&gt; 所有 (Copyでない型)<br>所有 -&gt; 所有 (Copy型) </td></tr>
+<tr><td> <code>into_</code> </td><td> 可変 </td><td> 所有 -&gt; 所有 (Copyでない型) </td></tr>
+</tbody></table>
+<p>以下に例を挙げます。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/primitive.str.html#method.as_bytes"><code>str::as_bytes()</code></a>はコストなしに、<code>str</code>をUTF-8バイト列として見たビューを返します。
+入力は借用された<code>&amp;str</code>で出力は借用された<code>&amp;[u8]</code>です。</li>
+<li><a href="https://doc.rust-lang.org/std/path/struct.Path.html#method.to_str"><code>Path::to_str</code></a>はOSの与えるパスのバイト列に対し、コストの高いUTF-8チェックを行います。
+入出力はともに借用されています。小さくない実行時コストがあるため、これを<code>as_str</code>と呼ぶことはできません。</li>
+<li><a href="https://doc.rust-lang.org/std/primitive.str.html#method.to_lowercase"><code>str::to_lowercase()</code></a>はUnicode規格に沿って<code>str</code>を小文字に変換したものを返します。
+この処理は文字列のデコードを含み、またメモリの確保も行うでしょう。
+入力は借用された<code>&amp;str</code>で出力は所有された<code>String</code>です。</li>
+<li><a href="https://doc.rust-lang.org/std/primitive.f64.html#method.to_radians"><code>f64::to_radians()</code></a>は浮動小数点数で表された角度を度からラジアンに変換します。
+入力は<code>f64</code>です。これが<code>&amp;f64</code>でないのは、コピーに殆どコストが掛からないためです。
+入力が消費されないので、このメソッドを<code>into_radians</code>と呼ぶのはミスリーディングです。</li>
+<li><a href="https://doc.rust-lang.org/std/string/struct.String.html#method.into_bytes"><code>String::into_bytes()</code></a>は<code>String</code>がラップしている<code>Vec&lt;u8&gt;</code>を取り出します。
+この処理にコストは掛かりません。このメソッドは<code>String</code>の所有権を得て、所有された<code>Vec&lt;u8&gt;</code>を返します。</li>
+<li><a href="https://doc.rust-lang.org/std/io/struct.BufReader.html#method.into_inner"><code>BufReader::into_inner()</code></a>はバッファリングされたreaderの所有権を得て、ラップされていたreaderを取り出します。
+この処理にコストは掛かりません。バッファ内のデータは破棄されます。</li>
+<li><a href="https://doc.rust-lang.org/std/io/struct.BufWriter.html#method.into_inner"><code>BufWriter::into_inner()</code></a>はバッファリングされたwriterの所有権を得て、ラップされていたwriterを取り出します。
+この処理にはコストの掛かるバッファのフラッシングが必要なことがあります。</li>
+</ul>
+<p><code>as_</code>や<code>into_</code>の付くような変換メソッドは一般に抽象を弱めます。
+内部表現を公開したり(<code>as</code>)、データを内部表現に分解したり(<code>into</code>)することになるからです。
+一方で、<code>to_</code>と付くような変換メソッドは一般に抽象レベルを保てることが多いですが、
+内部で何らかの処理を行いデータの表現方法を変換する必要があります。</p>
+<p>ある値をラップして高レベルの意味を持たせるような型において、
+ラップされた型にアクセスさせる手段は<code>into_inner()</code>メソッドによって提供されるべきです。
+これは例えば、バッファリングを提供する<a href="https://doc.rust-lang.org/std/io/struct.BufReader.html#method.into_inner"><code>BufReader</code></a>や、
+エンコード・デコードを行う<a href="https://docs.rs/flate2/0.2.19/flate2/read/struct.GzDecoder.html#method.into_inner"><code>GzDecoder</code></a>、
+アトミックなアクセスを提供する<a href="https://doc.rust-lang.org/std/sync/atomic/struct.AtomicBool.html#method.into_inner"><code>AtomicBool</code></a>といった型のようなセマンティクスを持つ型に適用できます。</p>
+<p>変換メソッドの名前に<code>mut</code>を含めるときは、返り値の型の記述と同じ順番にしてください。
+例えば<a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_mut_slice"><code>Vec::as_mut_slice</code></a>はミュータブルは名前の通りスライスを返します。
+例えば<code>as_slice_mut</code>等よりもこのような命名が推奨されます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// Return type is a mut slice.
+fn as_mut_slice(&amp;mut self) -&gt; &amp;mut [T];
+#}</code></pre></pre>
+<a class="header" href="naming.html#標準ライブラリでのさらなる例" id="標準ライブラリでのさらなる例"><h5>標準ライブラリでのさらなる例</h5></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/result/enum.Result.html#method.as_ref"><code>Result::as_ref</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html#method.as_ptr"><code>RefCell::as_ptr</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec"><code>slice::to_vec</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/option/enum.Option.html#method.into_iter"><code>Option::into_iter</code></a></li>
+</ul>
+<p><a id="c-getter"></a></p>
+<a class="header" href="naming.html#getterの名前がrustの規則に従っている-c-getter" id="getterの名前がrustの規則に従っている-c-getter"><h2>Getterの名前がRustの規則に従っている (C-GETTER)</h2></a>
+<p>後述するような例外を除き、getterの名前を<code>get_</code>で始めるべきではありません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub struct S {
+    first: First,
+    second: Second,
+}
+
+impl S {
+    // Not get_first.
+    pub fn first(&amp;self) -&gt; &amp;First {
+        &amp;self.first
+    }
+
+    // Not get_first_mut, get_mut_first, or mut_first.
+    pub fn first_mut(&amp;mut self) -&gt; &amp;mut First {
+        &amp;mut self.first
+    }
+}
+#}</code></pre></pre>
+<p><code>get</code>という命名は、getterによって得られるものが自明である場合にのみ使用されるべきです。
+例えば、<a href="https://doc.rust-lang.org/std/cell/struct.Cell.html#method.get"><code>Cell::get</code></a>は<code>Cell</code>の中身を返します。</p>
+<p>境界検査といった、実行時のバリデーションが必要なgetterには、
+unsafeな<code>_unchecked</code>版も用意できないか検討してください。
+そのようなメソッドの宣言はふつう、以下のようになります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn get(&amp;self, index: K) -&gt; Option&lt;&amp;V&gt;;
+fn get_mut(&amp;mut self, index: K) -&gt; Option&lt;&amp;mut V&gt;;
+unsafe fn get_unchecked(&amp;self, index: K) -&gt; &amp;V;
+unsafe fn get_unchecked_mut(&amp;mut self, index: K) -&gt; &amp;mut V;
+#}</code></pre></pre>
+<p>getterと変換(<a href="naming.html#c-conv">C-CONV</a>)の間の違いは往々にして微かなもので、
+常に境界がハッキリしている訳ではありません。
+例えば<a href="https://docs.rs/tempdir/0.3.5/tempdir/struct.TempDir.html#method.path"><code>TempDir::path</code></a>は一時ディレクトリのファイルシステム上のパスのgetterとして捉えられますが、
+<a href="https://docs.rs/tempdir/0.3.5/tempdir/struct.TempDir.html#method.into_path"><code>TempDir::into_path</code></a>は一時ディレクトリを削除する責任を呼び出し側に移す変換メソッドです。
+このような場合<code>path</code>はgetterなので、<code>get_path</code>や<code>as_path</code>と呼ぶことは正しくありません。</p>
+<a class="header" href="naming.html#標準ライブラリでのさらなる例-1" id="標準ライブラリでのさらなる例-1"><h3>標準ライブラリでのさらなる例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/io/struct.Cursor.html#method.get_mut"><code>std::io::Cursor::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/ptr/struct.Unique.html#method.get_mut"><code>std::ptr::Unique::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/sync/struct.PoisonError.html#method.get_mut"><code>std::sync::PoisonError::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/sync/atomic/struct.AtomicBool.html#method.get_mut"><code>std::sync::atomic::AtomicBool::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/collections/hash_map/struct.OccupiedEntry.html#method.get_mut"><code>std::collections::hash_map::OccupiedEntry::get_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked"><code>&lt;[T]&gt;::get_unchecked</code></a></li>
+</ul>
+<p><a id="c-iter"></a></p>
+<a class="header" href="naming.html#イテレータを生成するメソッドの名前がiter-iter_mut-into_iterとなっている-c-iter" id="イテレータを生成するメソッドの名前がiter-iter_mut-into_iterとなっている-c-iter"><h2>イテレータを生成するメソッドの名前が<code>iter</code>, <code>iter_mut</code>, <code>into_iter</code>となっている ([C-ITER])</h2></a>
+<p><a href="https://github.com/rust-lang/rfcs/blob/master/text/0199-ownership-variants.md">RFC 199</a>に従ってください。</p>
+<p><code>U</code>という型の要素を持つコンテナの場合、イテレータを生成するメソッドは次のように命名するべきです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn iter(&amp;self) -&gt; Iter             // Iter implements Iterator&lt;Item = &amp;U&gt;
+fn iter_mut(&amp;mut self) -&gt; IterMut  // IterMut implements Iterator&lt;Item = &amp;mut U&gt;
+fn into_iter(self) -&gt; IntoIter     // IntoIter implements Iterator&lt;Item = U&gt;
+#}</code></pre></pre>
+<p>この指針は全ての要素が同質であると意味付けられたコレクションに対して適用されます。
+例えば<code>str</code>はバイト列ですが、有効なUTF-8であるという保証があるため、この指針は適用できません。
+従って<code>iter</code>/<code>iter_mut</code>/<code>into_iter</code>といったメソッド群ではなく、
+バイト列としてイテレートする<a href="https://doc.rust-lang.org/std/primitive.str.html#method.bytes"><code>str::bytes</code></a>、キャラクタ列としてイテレートする<a href="https://doc.rust-lang.org/std/primitive.str.html#method.chars"><code>str::chars</code></a>を持ちます。</p>
+<p>このガイドラインはメソッドにのみ適用され、関数は対象外です。
+例えば<code>url</code>クレートの<a href="https://docs.rs/url/1.4.0/url/percent_encoding/fn.percent_encode.html"><code>percent_encode</code></a>は文字列をパーセントエンコーディングしていくイテレータを返します。
+この場合、<code>iter</code>/<code>iter_mut</code>/<code>into_iter</code>といった命名を使うことに利点はありません。</p>
+<a class="header" href="naming.html#標準ライブラリでの例-1" id="標準ライブラリでの例-1"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter"><code>Vec::iter</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter_mut"><code>Vec::iter_mut</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_iter"><code>Vec::into_iter</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.iter"><code>BTreeMap::iter</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.iter_mut"><code>BTreeMap::iter_mut</code></a></li>
+</ul>
+<p><a id="c-iter-ty"></a></p>
+<a class="header" href="naming.html#イテレータの型名がそれを生成するメソッドと揃っている-c-iter-ty" id="イテレータの型名がそれを生成するメソッドと揃っている-c-iter-ty"><h2>イテレータの型名が、それを生成するメソッドと揃っている (C-ITER-TY)</h2></a>
+<p><code>into_iter</code>というメソッドは<code>IntoIter</code>という型を返すべきです。
+他のイテレータを返すメソッドでも同様です。</p>
+<p>この指針は主にメソッドに対して適用されますが、関数に対しても大抵は適用できます。
+例えば<code>url</code>クレートの<a href="https://docs.rs/url/1.4.0/url/percent_encoding/fn.percent_encode.html"><code>percent_encode</code></a>関数は<a href="https://docs.rs/url/1.4.0/url/percent_encoding/struct.PercentEncode.html"><code>PercentEncode</code></a>
+という型名のイテレータを返します。</p>
+<p>このような命名法は<a href="https://doc.rust-lang.org/std/vec/struct.IntoIter.html"><code>vec::IntoIter</code></a>のようにモジュール名を付けて呼ぶ際に最も有用です。</p>
+<a class="header" href="naming.html#標準ライブラリでの例-2" id="標準ライブラリでの例-2"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter"><code>Vec::iter</code></a> は <a href="https://doc.rust-lang.org/std/slice/struct.Iter.html"><code>Iter</code></a> を返す。</li>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.iter_mut"><code>Vec::iter_mut</code></a> は <a href="https://doc.rust-lang.org/std/slice/struct.IterMut.html"><code>IterMut</code></a> を返す。</li>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_iter"><code>Vec::into_iter</code></a> は <a href="https://doc.rust-lang.org/std/vec/struct.IntoIter.html"><code>IntoIter</code></a> を返す。</li>
+<li><a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.keys"><code>BTreeMap::keys</code></a> は <a href="https://doc.rust-lang.org/std/collections/btree_map/struct.Keys.html"><code>Keys</code></a> を返す。</li>
+<li><a href="https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.values"><code>BTreeMap::values</code></a> は <a href="https://doc.rust-lang.org/std/collections/btree_map/struct.Values.html"><code>Values</code></a> を返す。</li>
+</ul>
+<p><a id="c-feature"></a></p>
+<a class="header" href="naming.html#featureの名前に余計な単語が入っていない-c-feature" id="featureの名前に余計な単語が入っていない-c-feature"><h2>Featureの名前に余計な単語が入っていない (C-FEATURE)</h2></a>
+<p><a href="http://doc.crates.io/manifest.html#the-features-section">Cargoのfeature</a>の名前に意味のない単語を付けないでください。
+<code>use-abc</code>や<code>with-abc</code>などとせず、単に<code>abc</code>とするべきです。</p>
+<p>標準ライブラリへの依存がオプションである場合が最もよく目にする例でしょう。
+これを指針に従って行うと、以下のようになります。</p>
+<pre><code class="language-toml"># In Cargo.toml
+
+[features]
+default = [&quot;std&quot;]
+std = []
+</code></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// In lib.rs
+
+#![cfg_attr(not(feature = &quot;std&quot;), no_std)]
+#}</code></pre></pre>
+<p>このfeatureに<code>std</code>以外の、<code>use-std</code>や<code>with-std</code>あるいはその他の独創的な名前を付けないでください。
+そうすることで、Cargoが暗黙的に追加するオプショナルな依存性のfeatureと沿った形になります。
+例えば<code>x</code>というクレートがSerdeと標準ライブラリに対する依存をオプションとして持つとき、</p>
+<pre><code class="language-toml">[package]
+name = &quot;x&quot;
+version = &quot;0.1.0&quot;
+
+[features]
+std = [&quot;serde/std&quot;]
+
+[dependencies]
+serde = { version = &quot;1.0&quot;, optional = true }
+</code></pre>
+<p>のようになります。そして、さらに<code>x</code>に依存するとき、Serdeへの依存を
+<code>features = [&quot;serde&quot;]</code>で有効化できます。
+また、同じように標準ライブラリへの依存を<code>features = [&quot;std&quot;]</code>で有効化できます。
+Cargoによって暗黙的に追加されるfeatureは<code>serde</code>であり、<code>use-serde</code>でも<code>with-serde</code>でもありません。
+ですから、明示的なfeatureに対しても同じようにするべきなのです。</p>
+<p>関連事項として、Cargoのfeatureは追加式ですから、
+<code>no-abc</code>といったfeatureは大きな間違いです。</p>
+<p><a id="c-word-order"></a></p>
+<a class="header" href="naming.html#命名時に単語を並べる順番が揃っている-c-word-order" id="命名時に単語を並べる順番が揃っている-c-word-order"><h2>命名時に単語を並べる順番が揃っている (C-WORD-ORDER)</h2></a>
+<p>標準ライブラリにおけるエラー型をいくつか示します。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/env/struct.JoinPathsError.html"><code>JoinPathsError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/str/struct.ParseBoolError.html"><code>ParseBoolError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/char/struct.ParseCharError.html"><code>ParseCharError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/num/struct.ParseFloatError.html"><code>ParseFloatError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/num/struct.ParseIntError.html"><code>ParseIntError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/sync/mpsc/enum.RecvTimeoutError.html"><code>RecvTimeoutError</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/path/struct.StripPrefixError.html"><code>StripPrefixError</code></a></li>
+</ul>
+<p>全て、動詞-オブジェクト-エラーの順番で並んでいます。
+もし新たにアドレスのパースに失敗したことを表すエラーを追加するならば、
+<code>AddrParseError</code>等ではなく、
+一貫性を考えて動詞-オブジェクト-エラーの順に並べ<code>ParseAddrError</code>とすべきです。</p>
+<p>どの順番を選ぶかは大して重要ではありませんが、クレート内での一貫性、
+標準ライブラリの似た機能との整合性には注意してください。</p>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="checklist.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="interoperability.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="checklist.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="interoperability.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

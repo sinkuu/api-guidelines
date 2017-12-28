@@ -1,0 +1,366 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>ドキュメンテーション - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html" class="active"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="documentation.html#ドキュメンテーション" id="ドキュメンテーション"><h1>ドキュメンテーション</h1></a>
+<p><a id="c-crate-doc"></a></p>
+<a class="header" href="documentation.html#クレートレベルにコード例付きの詳細なドキュメントがある-c-crate-doc" id="クレートレベルにコード例付きの詳細なドキュメントがある-c-crate-doc"><h2>クレートレベルにコード例付きの詳細なドキュメントがある (C-CRATE-DOC)</h2></a>
+<p><a href="https://github.com/rust-lang/rfcs/pull/1687">RFC 1687</a>を参照してください。</p>
+<p><a id="c-example"></a></p>
+<a class="header" href="documentation.html#全てのアイテムにコード例が付いている-c-example" id="全てのアイテムにコード例が付いている-c-example"><h2>全てのアイテムにコード例が付いている (C-EXAMPLE)</h2></a>
+<p>全てのパブリックなモジュール、トレイト、構造体型、列挙型、関数、メソッド、マクロ、
+およびtypeエイリアスに、その機能を示すコード例を含むrustdocドキュメントが存在するべきです。</p>
+<p>この指針は無理のない範囲で適用してください。</p>
+<p>適用可能な、その他のアイテムにおけるコード例へのリンクでも十分でしょう。
+例えば、ある関数がある型を使うとして、
+コード例が関数と型のどちらか一方にあれば、もう一方からはリンクするだけで十分です。</p>
+<p>コード例の目的が<em>どのように</em>そのアイテムを使うかを示すことであるとは限りません。
+読者は関数の呼び出し方、列挙型に対するmatchの使い方といった基本的な事柄は理解していると期待できます。
+ですから、コード例の目的は<em>なぜ</em>アイテムを使うべきかの提示であることも多くあります。</p>
+<pre><pre class="playpen"><code class="language-rust">// これはclone()を使うコード例の不味い例です。
+// *どう*clone()を呼ぶのか機械的に示しているだけであり、
+// *なぜ*これを使うべきかがまったく示されていません。
+fn main() {
+    let hello = &quot;hello&quot;;
+
+    hello.clone();
+}
+</code></pre></pre>
+<p><a id="c-question-mark"></a></p>
+<a class="header" href="documentation.html#コード例がtryやunwrapではなくを使っている-c-question-mark" id="コード例がtryやunwrapではなくを使っている-c-question-mark"><h2>コード例が<code>try!</code>や<code>unwrap</code>ではなく<code>?</code>を使っている (C-QUESTION-MARK)</h2></a>
+<p>ユーザがコード例を丸写しすることは、その良し悪しは別としてよくあることです。
+そして、エラーをunwrapするか否かという判断はユーザが自覚的に判断すべきことです。</p>
+<p>エラー処理を含むコード例を構成する一般的な方法を以下に示します。
+<code>#</code>で始まる行は<code>cargo test</code>によってコンパイルされますが、
+ユーザに見えるrustdocには表示されません。</p>
+<pre><code>/// ```rust
+/// # use std::error::Error;
+/// #
+/// # fn try_main() -&gt; Result&lt;(), Box&lt;Error&gt;&gt; {
+/// your;
+/// example?;
+/// code;
+/// #
+/// #     Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
+/// ```
+</code></pre>
+<p><a id="c-failure"></a></p>
+<a class="header" href="documentation.html#関数のドキュメントにエラーパニック安全性に関する事項が含まれている-c-failure" id="関数のドキュメントにエラーパニック安全性に関する事項が含まれている-c-failure"><h2>関数のドキュメントにエラー、パニック、安全性に関する事項が含まれている (C-FAILURE)</h2></a>
+<p>エラーとなる条件を&quot;Errors&quot;セクションに記載するべきです。
+これはトレイトメソッドに対しても同様です。エラーを返す可能性のあるトレイトメソッドには
+&quot;Errors&quot;セクションを含んだドキュメントを付けるべきです。</p>
+<p>標準ライブラリの例を挙げると、トレイトメソッド<a href="https://doc.rust-lang.org/std/io/trait.Read.html#tymethod.read"><code>std::io::Read::read</code></a>の実装のいくつかは
+エラーを返す可能性があります。</p>
+<pre><code>/// Pull some bytes from this source into the specified buffer, returning
+/// how many bytes were read.
+///
+/// ... lots more info ...
+///
+/// # Errors
+///
+/// If this function encounters any form of I/O or other error, an error
+/// variant will be returned. If an error is returned then it must be
+/// guaranteed that no bytes were read.
+</code></pre>
+<p>また、パニックを起こす条件を&quot;Panics&quot;セクションに記載するべきです。
+これはトレイトメソッドに対しても同様です。パニックを起こす可能性のあるトレイトメソッドには
+&quot;Panics&quot;セクションを含んだドキュメントを付けるべきです。</p>
+<p>標準ライブラリを例にすると、パニックを起こす可能性のあるメソッドとして<a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert"><code>Vec::insert</code></a>が挙げられます。</p>
+<pre><code>/// Inserts an element at position `index` within the vector, shifting all
+/// elements after it to the right.
+///
+/// # Panics
+///
+/// Panics if `index` is out of bounds.
+</code></pre>
+<p>あらゆるパニックの可能性を網羅する必要はありません。
+特に、呼び出し側の提供したロジックの内部でパニックが起こる場合、
+例えば以下のような事例で<code>Display</code>のパニックをドキュメントに記載するのは過剰です。
+ですが、微妙なケースではできる限り多くの可能性を網羅する方が良いでしょう。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+/// # Panics
+///
+/// This function panics if `T`'s implementation of `Display` panics.
+pub fn print&lt;T: Display&gt;(t: T) {
+    println!(&quot;{}&quot;, t.to_string());
+}
+#}</code></pre></pre>
+<p>unsafeな関数のドキュメントには、
+その関数を正しく使うために呼び出し側が守らなければならない不変条件を記載した
+&quot;Safety&quot;セクションを含めてください。</p>
+<p>例えば、unsafeな関数である<a href="https://doc.rust-lang.org/std/ptr/fn.read.html"><code>std::ptr::read</code></a>は以下の事項を呼び出し側に要求しています。</p>
+<pre><code>/// Reads the value from `src` without moving it. This leaves the
+/// memory in `src` unchanged.
+///
+/// # Safety
+///
+/// Beyond accepting a raw pointer, this is unsafe because it semantically
+/// moves the value out of `src` without preventing further usage of `src`.
+/// If `T` is not `Copy`, then care must be taken to ensure that the value at
+/// `src` is not used before the data is overwritten again (e.g. with `write`,
+/// `zero_memory`, or `copy_memory`). Note that `*src = foo` counts as a use
+/// because it will attempt to drop the value previously at `*src`.
+///
+/// The pointer must be aligned; use `read_unaligned` if that is not the case.
+</code></pre>
+<p><a id="c-link"></a></p>
+<a class="header" href="documentation.html#文章に関係する項目へのリンクを含める-c-link" id="文章に関係する項目へのリンクを含める-c-link"><h2>文章に関係する項目へのリンクを含める (C-LINK)</h2></a>
+<p>同じ型の別のメソッドへのリンクはふつう次のようになります。</p>
+<pre><code class="language-md">[`serialize_struct`]: #method.serialize_struct
+</code></pre>
+<p>別の型へのリンクはこうなります。</p>
+<pre><code class="language-md">[`Deserialize`]: trait.Deserialize.html
+</code></pre>
+<p>親・子モジュールへのリンクは次のようにします。</p>
+<pre><code class="language-md">[`Value`]: ../enum.Value.html
+[`DeserializeOwned`]: de/trait.DeserializeOwned.html
+</code></pre>
+<p>この指針はRFC 1574の<a href="https://github.com/rust-lang/rfcs/blob/master/text/1574-more-api-documentation-conventions.md#link-all-the-things">&quot;Link all the things&quot;</a>によって公式に推奨されています。</p>
+<p><a id="c-metadata"></a></p>
+<a class="header" href="documentation.html#cargotomlが一般的なメタデータを全て含んでいる-c-metadata" id="cargotomlが一般的なメタデータを全て含んでいる-c-metadata"><h2>Cargo.tomlが一般的なメタデータを全て含んでいる (C-METADATA)</h2></a>
+<p><code>Cargo.toml</code>の<code>[package]</code>セクションは以下の値を含むべきです。</p>
+<ul>
+<li><code>authors</code></li>
+<li><code>description</code></li>
+<li><code>license</code></li>
+<li><code>repository</code></li>
+<li><code>readme</code></li>
+<li><code>keywords</code></li>
+<li><code>categories</code></li>
+</ul>
+<p>加えて、2つの任意項目があります。</p>
+<ul>
+<li><code>documentation</code></li>
+<li><code>homepage</code></li>
+</ul>
+<p>デフォルトで、<em>crates.io</em>は<a href="https://docs.rs"><em>docs.rs</em></a>上のドキュメントへリンクします。
+<code>documentation</code>メタデータは<em>docs.rs</em>以外の場所でドキュメントをホストしている場合にのみ必要です。
+例えば、そのクレートが<em>docs.rs</em>のビルド環境に存在しない共有ライブラリを要求している場合などです。</p>
+<p><code>homepage</code>メタデータはソースレポジトリやAPIドキュメント以外の独自のウェブサイトがある場合のみ
+使用されるべきです。<code>documentation</code>や<code>repository</code>と重複した値を入れないでください。
+例えば、Serdeは<code>homepage</code>を専用のウェブサイトである<em>https://serde.rs</em>に設定しています。</p>
+<p><a id="c-html-root"></a></p>
+<a class="header" href="documentation.html#html_root_url属性が設定されている-c-html-root" id="html_root_url属性が設定されている-c-html-root"><h3>html_root_url属性が設定されている (C-HTML-ROOT)</h3></a>
+<!--
+Remove this guideline once rustdoc links no-deps documentation with no
+html_root_url to docs.rs by default.
+https://github.com/rust-lang/rust/issues/42301
+-->
+<p>docs.rsを主なAPIドキュメントとして使っているならば<code>&quot;https://docs.rs/CRATE/MAJOR.MINOR.PATCH&quot;</code>に設定してください。</p>
+<p><code>html_root_url</code>属性は、rustdocが下流クレートをコンパイルする際にどのようにURLを作成するべきかを伝えるものです。
+これが無ければ、あなたのクレートに依存するクレートにおいて、ドキュメント中のリンクが間違ったものになります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![doc(html_root_url = &quot;https://docs.rs/log/0.3.8&quot;)]
+#fn main() {
+#}</code></pre></pre>
+<p>バージョンがURLに含まれていることから分かる通り、
+<code>Cargo.toml</code>内のバージョン番号と同期させる必要があります。
+<code>html_root_url</code>がクレートのバージョンとずれた場合に失敗するインテグレーションテストを追加する
+<a href="https://crates.io/crates/version-sync"><code>version-sync</code></a>クレートが役に立つはずです。</p>
+<p>この方式が気に入らなければ、<code>Cargo.toml</code>のバージョンの所にメモ書きを残しておくとよいでしょう。</p>
+<pre><code class="language-toml">version = &quot;0.3.8&quot; # html_root_urlの更新 忘れない
+</code></pre>
+<p>docs.rs以外にドキュメントをホストしているなら、<code>html_root_url</code>の値にクレート名 + index.htmlを付け足すと
+あなたのクレートのルートモジュールにたどり着けるように設定してください。
+例えば、ルートモジュールが<code>&quot;https://api.rocket.rs/rocket/index.html&quot;</code>にあるならば、
+<code>html_root_url</code>は<code>&quot;https://api.rocket.rs&quot;</code>とすべきです。</p>
+<p><a id="c-relnotes"></a></p>
+<a class="header" href="documentation.html#大きな変更が全てリリースノートに記載されている-c-relnotes" id="大きな変更が全てリリースノートに記載されている-c-relnotes"><h2>大きな変更が全てリリースノートに記載されている (C-RELNOTES)</h2></a>
+<p>クレートのユーザはリリースノートを読むことでバージョン間の変更点を知ることができます。
+クレートレベルのドキュメントまたはCargo.tomlからリンクされたリポジトリにリリースノートへのリンクを置いてください。</p>
+<p>破壊的変更(<a href="https://github.com/rust-lang/rfcs/blob/master/text/1105-api-evolution.md">RFC 1105</a>で定義されている)は明確に区別されているべきです。</p>
+<p>Gitを用いてソースコードの履歴を管理しているなら、
+<em>crates.io</em>に発行された全てのリリースは対応するコミットにタグを付けてください。
+Git以外のVCSでも同様の処理をしておくべきです。</p>
+<pre><code class="language-bash"># Tag the current commit
+GIT_COMMITTER_DATE=$(git log -n1 --pretty=%aD) git tag -a -m &quot;Release 0.3.0&quot; 0.3.0
+git push --tags
+</code></pre>
+<p>アノテーション付きタグが一つでも存在するとアノテーションのないタグを無視するGitコマンドがあるため、
+アノテーション付きタグの使用が推奨されます。</p>
+<a class="header" href="documentation.html#例" id="例"><h3>例</h3></a>
+<ul>
+<li><a href="https://github.com/serde-rs/serde/releases/tag/v1.0.0">Serde 1.0.0 release notes</a></li>
+<li><a href="https://github.com/serde-rs/serde/releases/tag/v0.9.8">Serde 0.9.8 release notes</a></li>
+<li><a href="https://github.com/serde-rs/serde/releases/tag/v0.9.0">Serde 0.9.0 release notes</a></li>
+<li><a href="https://github.com/diesel-rs/diesel/blob/master/CHANGELOG.md">Diesel change log</a></li>
+</ul>
+<p><a id="c-hidden"></a></p>
+<a class="header" href="documentation.html#無用な実装詳細がrustdocに表示されていない-c-hidden" id="無用な実装詳細がrustdocに表示されていない-c-hidden"><h2>無用な実装詳細がRustdocに表示されていない (C-HIDDEN)</h2></a>
+<p>Rustdocはユーザがそのクレートを使用するのに必要な情報を網羅すべきですが、
+それ以上の内容は含むべきではありません。
+文章中で関係のある実装詳細を解説するのはよいですが、
+実際にドキュメント項目として現れてはいけません。</p>
+<p>特に、どのようなimplがドキュメントに表示されるかに関しては精選するようにしてください。
+ユーザがクレートを使用するのに必要なものだけ示し、それ以外は隠しましょう。
+以下のコードでは、<code>PublicError</code>のドキュメントに<code>From&lt;PrivateError&gt;</code>が表示されてしまいます。
+ユーザが<code>PrivateError</code>型を扱うことはないため、この項目はユーザにとっては関係ないものです。
+なので、<code>#[doc(hidden)]</code>を使って隠します。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// This error type is returned to users.
+pub struct PublicError { /* ... */ }
+
+// This error type is returned by some private helper functions.
+struct PrivateError { /* ... */ }
+
+// Enable use of `?` operator.
+#[doc(hidden)]
+impl From&lt;PrivateError&gt; for PublicError {
+    fn from(err: PrivateError) -&gt; PublicError {
+        /* ... */
+    }
+}
+#}</code></pre></pre>
+<p><a href="https://github.com/rust-lang/rfcs/blob/master/text/1422-pub-restricted.md"><code>pub(crate)</code></a>も実装詳細をパブリックなAPIから隠す便利なツールです。
+同じモジュール以外からもアイテムを使えるようになりますが、他のクレートからは見えません。</p>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="macros.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="predictability.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="macros.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="predictability.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

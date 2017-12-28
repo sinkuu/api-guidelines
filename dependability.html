@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>信頼性 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html" class="active"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="dependability.html#信頼性" id="信頼性"><h1>信頼性</h1></a>
+<p><a id="c-validate"></a></p>
+<a class="header" href="dependability.html#関数が引数を検証している-c-validate" id="関数が引数を検証している-c-validate"><h2>関数が引数を検証している (C-VALIDATE)</h2></a>
+<p>RustでのAPIは「送るものに関しては厳密に、受け取るものに関しては寛容に」という<a href="http://en.wikipedia.org/wiki/Robustness_principle">堅牢性原則</a>には縛られません。</p>
+<p>代わりに、Rustコードは可能なかぎり入力の正しさを <em>検証</em> すべきです。</p>
+<p>この検証は、以下のようにして行うことができます(より推奨されるものの順に並んでいます)。</p>
+<a class="header" href="dependability.html#静的な検証" id="静的な検証"><h3>静的な検証</h3></a>
+<p>不正な値を受け付けないよう引数の型を選んでください。</p>
+<p>例えば次のようにします。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo(a: Ascii) { /* ... */ }
+#}</code></pre></pre>
+<p>このようにしてはいけません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo(a: u8) { /* ... */ }
+#}</code></pre></pre>
+<p>ここで<code>Ascii</code>は<code>u8</code>の <em>ラッパ</em> であり、最上位ビットがゼロであることを保証します。
+型安全なラッパを作る方法はnewtypeパターン(<a href="type-safety.html#c-newtype">C-NEWTYPE</a>)を参照してください。</p>
+<p>静的な検証は型の境界にコストを押し込む(例えば、<code>u8</code>は<code>Ascii</code>に変換しなければ受け付けない)ため、
+実行時コストが掛かることは余りありません。 また、実行時ではなくコンパイル中にバグが検出されます。</p>
+<p>一方、型を用いて表すことが困難あるいは不可能な特性も存在します。</p>
+<a class="header" href="dependability.html#動的な検証" id="動的な検証"><h3>動的な検証</h3></a>
+<p>入力を処理と同時に(あるいは必要ならば事前に)検証します。
+動的な検証は静的な検証よりも実装が簡単ですが、いくつかの欠点があります。</p>
+<ol>
+<li>実行時コスト (処理と検証を同時に行うことができない場合)</li>
+<li>バグの検出が遅れます</li>
+<li>パニックや<code>Result</code>/<code>Option</code>型による失敗ケースを呼び出し側のコードで処理しなければなりません</li>
+</ol>
+<a class="header" href="dependability.html#debug_assertによる動的な検証" id="debug_assertによる動的な検証"><h4><code>debug_assert!</code>による動的な検証</h4></a>
+<p>プロダクションビルドにおいて高コストな検証を行わないようにできるかもしれません。</p>
+<a class="header" href="dependability.html#動的な検証のオプトアウト" id="動的な検証のオプトアウト"><h4>動的な検証のオプトアウト</h4></a>
+<p>チェックを行わないバージョンの関数を追加します。</p>
+<p>チェックを行わない関数の名前の後ろに<code>_unchecked</code>と付けたり、<code>raw</code>という名前のモジュールに置かれたりするのが一般的です。</p>
+<p>チェックを行わない関数は(1)パフォーマンスがチェックよりも優先される場合
+(2)入力が正しいと呼び出し側が確信している場合に使うことができます。</p>
+<p><a id="c-dtor-fail"></a></p>
+<a class="header" href="dependability.html#デストラクタが失敗しない-c-dtor-fail" id="デストラクタが失敗しない-c-dtor-fail"><h2>デストラクタが失敗しない (C-DTOR-FAIL)</h2></a>
+<p>デストラクタはパニック時にも実行されますが、その際にさらにデストラクタ内でパニックすると
+プログラムは強制終了します。</p>
+<p>デストラクタでパニックする代わりに、<code>Result</code>を返して失敗を通知する<code>close</code>メソッドのような、
+失敗を確認することのできる破棄メソッドを追加してください。</p>
+<p><a id="c-dtor-block"></a></p>
+<a class="header" href="dependability.html#ブロックする可能性のあるデストラクタには代替手段を用意する-c-dtor-block" id="ブロックする可能性のあるデストラクタには代替手段を用意する-c-dtor-block"><h2>ブロックする可能性のあるデストラクタには代替手段を用意する (C-DTOR-BLOCK)</h2></a>
+<p>デバッグが難しくなるため、デストラクタでブロックするような操作を行うべきではありません。
+ブロックせずに破棄を行える別のメソッドを追加するべきです。</p>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="type-safety.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="debuggability.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="type-safety.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="debuggability.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>相互運用性 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html" class="active"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="interoperability.html#相互運用性" id="相互運用性"><h1>相互運用性</h1></a>
+<p><a id="c-common-traits"></a></p>
+<a class="header" href="interoperability.html#積極的に一般的なトレイトを型に実装している-c-common-traits" id="積極的に一般的なトレイトを型に実装している-c-common-traits"><h2>積極的に一般的なトレイトを型に実装している (C-COMMON-TRAITS)</h2></a>
+<p>Rustのトレイトシステムは <em>孤立</em> を許容しません。
+大まかに言うと、全ての<code>impl</code>はトレイトのあるクレートか、実装対象の型があるクレートに置かれる必要があります。
+従って、型を定義するクレートは積極的に、可能な限り全ての一般的なトレイトを実装すべきです。</p>
+<p>次のような状況を考えてみてください。</p>
+<ul>
+<li><code>std</code>クレートが<code>Display</code>トレイトを宣言。</li>
+<li><code>url</code>クレートが<code>Url</code>型を宣言、<code>Display</code>を実装せず。</li>
+<li><code>webapp</code>クレートが<code>std</code>と<code>url</code>をインポート。</li>
+</ul>
+<p>この場合、<code>url</code>が<code>Display</code>を実装していない以上、<code>webapp</code>にはどうすることもできません。
+(newtypeパターンは有効な回避策ですが、不便です。)</p>
+<p>最も重要な、一般的なトレイトを<code>std</code>から挙げます。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/marker/trait.Copy.html"><code>Copy</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/clone/trait.Clone.html"><code>Clone</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cmp/trait.Eq.html"><code>Eq</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cmp/trait.PartialEq.html"><code>PartialEq</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cmp/trait.Ord.html"><code>Ord</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html"><code>PartialOrd</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/hash/trait.Hash.html"><code>Hash</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.Debug.html"><code>Debug</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.Display.html"><code>Display</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/default/trait.Default.html"><code>Default</code></a></li>
+</ul>
+<p>ある型に<code>Default</code>を実装し、引数を取らない<code>new</code>コンストラクタを追加するのは
+一般的かつ開発者の予期するところであることに注意してください。
+<code>new</code>は慣用的なコンストラクタであり、利用者はそれが存在することを期待します。
+従ってコンストラクタが引数を取らないのが自然であれば、
+<code>default</code>と機能的に同一であったとしてもコンストラクタが存在しているべきです。</p>
+<p><a id="c-conv-traits"></a></p>
+<a class="header" href="interoperability.html#変換に標準のトレイトfrom-asref-asmutを用いている-c-conv-traits" id="変換に標準のトレイトfrom-asref-asmutを用いている-c-conv-traits"><h2>変換に標準のトレイト<code>From</code>, <code>AsRef</code>, <code>AsMut</code>を用いている (C-CONV-TRAITS)</h2></a>
+<p>以下の変換用トレイトは理にかなう限り実装されているべきです。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.From.html"><code>From</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.TryFrom.html"><code>TryFrom</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.AsRef.html"><code>AsRef</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.AsMut.html"><code>AsMut</code></a></li>
+</ul>
+<p>以下の変換用トレイトは実装されるべきではありません。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.Into.html"><code>Into</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/convert/trait.TryInto.html"><code>TryInto</code></a></li>
+</ul>
+<p>上記のトレイトは<code>From</code>, <code>TryFrom</code>を基にしたブランケット実装を持つので、
+こちらを代わりに実装してください。</p>
+<a class="header" href="interoperability.html#標準ライブラリでの例" id="標準ライブラリでの例"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><code>From&lt;u16&gt;</code>が<code>u32</code>に実装されています。幅の小さい整数は常に幅の大きい整数に変換可能であるためです。</li>
+<li><code>From&lt;u32&gt;</code>は<code>u16</code>に実装されて<em>いません</em>。数値が大きすぎると変換できないためです。</li>
+<li><code>TryFrom&lt;u32&gt;</code>が<code>u16</code>に実装されており、<code>u16</code>に収まらないほど数値が大きければエラーを返します。</li>
+<li><a href="https://doc.rust-lang.org/std/net/struct.Ipv6Addr.html"><code>From&lt;Ipv6Addr&gt;</code></a>が<a href="https://doc.rust-lang.org/std/net/enum.IpAddr.html"><code>IpAddr</code></a>に実装されています。この型はv4とv6の両方のIPアドレスを表すことができます。</li>
+</ul>
+<p><a id="c-collect"></a></p>
+<a class="header" href="interoperability.html#コレクションがfromiteratorとextendを実装している-c-collect" id="コレクションがfromiteratorとextendを実装している-c-collect"><h2>コレクションが<code>FromIterator</code>と<code>Extend</code>を実装している (C-COLLECT)</h2></a>
+<p><a href="https://doc.rust-lang.org/std/iter/trait.FromIterator.html"><code>FromIterator</code></a>と<a href="https://doc.rust-lang.org/std/iter/trait.Extend.html"><code>Extend</code></a>を実装すると、
+そのコレクションは以下のイテレータメソッドと共に使うことができるようになります。</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect"><code>Iterator::collect</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.partition"><code>Iterator::partition</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.unzip"><code>Iterator::unzip</code></a></li>
+</ul>
+<p><code>FromIterator</code>はイテレータが含んでいる値からコレクションを生成するものです。
+<code>Extend</code>は既存のコレクションにイテレータの含む値を追加します。</p>
+<a class="header" href="interoperability.html#標準ライブラリでの例-1" id="標準ライブラリでの例-1"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a>は<code>FromIterator&lt;T&gt;</code>と<code>Extend&lt;T&gt;</code>の双方を実装しています。</li>
+</ul>
+<p><a id="c-serde"></a></p>
+<a class="header" href="interoperability.html#データ構造がserdeのserializeとdeserializeを実装している-c-serde" id="データ構造がserdeのserializeとdeserializeを実装している-c-serde"><h2>データ構造がSerdeの<code>Serialize</code>と<code>Deserialize</code>を実装している (C-SERDE)</h2></a>
+<p>データ構造として使われる型は<a href="https://docs.serde.rs/serde/trait.Serialize.html"><code>Serialize</code></a>及び<a href="https://docs.serde.rs/serde/trait.Deserialize.html"><code>Deserialize</code></a>を実装しているべきです。</p>
+<p>明らかにデータ構造である型とそうでない型の間にはグレーゾーンが存在します。
+<a href="https://docs.rs/linked-hash-map/0.4.2/linked_hash_map/struct.LinkedHashMap.html"><code>LinkedHashMap</code></a>や<a href="https://doc.rust-lang.org/std/net/enum.IpAddr.html"><code>IpAddr</code></a>はデータ構造です。
+<code>LinkedHashMap</code>や<code>IpAddr</code>をJSONファイルから読み取りたい、
+あるいはIPCを用いて他のプロセスに送りたいというのは当然の要求でしょう。
+一方で<a href="https://docs.rs/byteorder/1.0.0/byteorder/enum.LittleEndian.html"><code>LittleEndian</code></a>はデータ構造ではりません。
+これは<code>byteorder</code>の使うマーカ型で、 最適化によって消えるため実行時には存在しません。
+これらは違いが明らかな例です。曖昧な例に遭遇した場合、必要ならば
+IRCの#rustあるいは#serdeチャンネルで助言を求めることができます。</p>
+<p>クレートが他の用途でSerdeに依存していなければ、
+Cargoのfeatureを使ってSerdeへの依存をオプショナルにしたいと思われるかもしれません。
+そうすることで、下流のライブラリがSerdeへの依存を必要とする場合のみSerdeがコンパイルされるようになります。</p>
+<p>他のSerdeベースのライブラリとの一貫性を保つため、Cargoのfeatureの名前は単に<code>&quot;serde&quot;</code>とすべきです。
+その他、<code>&quot;serde_impls&quot;</code>や<code>&quot;serde_serialization&quot;</code>のような名前は使わないでください。</p>
+<p>deriveを使わない場合、典型的な例は以下のようになります。</p>
+<pre><code class="language-toml">[dependencies]
+serde = { version = &quot;1.0&quot;, optional = true }
+</code></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[cfg(feature = &quot;serde&quot;)]
+extern crate serde;
+
+struct T { /* ... */ }
+
+#[cfg(feature = &quot;serde&quot;)]
+impl Serialize for T { /* ... */ }
+
+#[cfg(feature = &quot;serde&quot;)]
+impl&lt;'de&gt; Deserialize&lt;'de&gt; for T { /* ... */ }
+#}</code></pre></pre>
+<p>そして、deriveを使う場合は以下のようになります。</p>
+<pre><code class="language-toml">[dependencies]
+serde = { version = &quot;1.0&quot;, optional = true, features = [&quot;derive&quot;] }
+</code></pre>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[cfg(feature = &quot;serde&quot;)]
+#[macro_use]
+extern crate serde;
+
+#[cfg_attr(feature = &quot;serde&quot;, derive(Serialize, Deserialize))]
+struct T { /* ... */ }
+#}</code></pre></pre>
+<p><a id="c-send-sync"></a></p>
+<a class="header" href="interoperability.html#型が可能な限りsendsyncである-c-send-sync" id="型が可能な限りsendsyncである-c-send-sync"><h2>型が可能な限り<code>Send</code>,<code>Sync</code>である (C-SEND-SYNC)</h2></a>
+<p><a href="https://doc.rust-lang.org/std/marker/trait.Send.html"><code>Send</code></a>および<a href="https://doc.rust-lang.org/std/marker/trait.Sync.html"><code>Sync</code></a>はコンパイラが可能だと判断できれば自動的に実装されます。</p>
+<p>生ポインタを操作する型の場合、<code>Send</code>および<code>Sync</code>の実装が
+その型のスレッドセーフ特性を正確に表すように注意してください。
+以下のようなテストを追加することで、
+<code>Send</code>や<code>Sync</code>の実装が意図せず外れるような退行バグの発生を防ぐことができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[test]
+fn test_send() {
+    fn assert_send&lt;T: Send&gt;() {}
+    assert_send::&lt;MyStrangeType&gt;();
+}
+
+#[test]
+fn test_sync() {
+    fn assert_sync&lt;T: Sync&gt;() {}
+    assert_sync::&lt;MyStrangeType&gt;();
+}
+#}</code></pre></pre>
+<p><a id="c-good-err"></a></p>
+<a class="header" href="interoperability.html#エラー型の意味が分かりやすく行儀の良い実装となっている-c-good-err" id="エラー型の意味が分かりやすく行儀の良い実装となっている-c-good-err"><h2>エラー型の意味が分かりやすく、行儀の良い実装となっている (C-GOOD-ERR)</h2></a>
+<p>エラー型とは、パブリックな関数から返される<code>Result&lt;T, E&gt;</code>における、任意の<code>E</code>のことです。
+エラー型は常に<a href="https://doc.rust-lang.org/std/error/trait.Error.html"><code>std::error::Error</code></a>トレイトを実装しているべきです。
+これは例えば<a href="https://docs.rs/error-chain"><code>error-chain</code></a>のようなエラー処理ライブラリによって異なるエラー型を抽象化して扱うために使われており、
+その型を別の型のエラーの<a href="https://doc.rust-lang.org/std/error/trait.Error.html#method.cause"><code>cause()</code></a>として使うことができるようになります。</p>
+<p>加えて、エラー型は<a href="https://doc.rust-lang.org/std/marker/trait.Send.html"><code>Send</code></a>、<a href="https://doc.rust-lang.org/std/marker/trait.Sync.html"><code>Sync</code></a>トレイトを実装するべきです。
+<code>Send</code>でないエラー型は<a href="https://doc.rust-lang.org/std/thread/fn.spawn.html"><code>thread::spawn</code></a>によって作られたスレッドから返すことはできません。
+そして<code>Sync</code>でない型は<a href="https://doc.rust-lang.org/std/sync/struct.Arc.html"><code>Arc</code></a>を用いて複数のスレッドから参照することかできません。
+これらはマルチスレッディングアプリケーションにおける、基本的なエラー処理での一般的な要求です。</p>
+<p><code>Send</code>と<code>Sync</code>は、<code>Send + Sync + Error</code>を要求する<a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.new"><code>std::io::Error::new</code></a>を用いて
+カスタムエラーをIOエラーに変換する際にも必要です。</p>
+<p>この指針について、注意が必要なのは<a href="https://docs.rs/reqwest/0.7.2/reqwest/struct.Error.html#method.get_ref"><code>reqwest::Error::get_ref</code></a>のようなErrorトレイトオブジェクトを返す関数です。
+普通は<code>Error + Send + Sync + 'static</code>が呼び出し側にとって最も有用です。
+<code>'static</code>を追加することにより、<a href="https://doc.rust-lang.org/std/error/trait.Error.html#method.downcast_ref-2"><code>Error::downcast_ref</code></a>を使うことが可能になります。</p>
+<p>例えエラーとして返せる有用な情報が無かったとしても、決して<code>()</code>をエラー型として使わないでください。</p>
+<ul>
+<li><code>()</code>は<code>Error</code>を実装していないため、<code>error-chain</code>のようなエラー処理ライブラリと共に使うことができません。</li>
+<li><code>()</code>は<code>Display</code>を実装していないため、利用者が自分でエラー時のメッセージを記述する必要があります。</li>
+<li><code>()</code>は<code>Debug</code>を実装していますが、<code>unwrap()</code>した際に役に立たないものです。</li>
+<li>下流のクレートが<code>?</code>演算子を使うためには、意味の不明瞭な<code>From&lt;()&gt;</code>をエラー型に実装しければなりません。</li>
+</ul>
+<p>代わりに、クレートや関数毎に意味の分かるエラー型を定義し、
+適切な<code>Error</code>および<code>Display</code>の実装を追加してください。
+返すべき情報がないならばユニット構造体型として定義することができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+use std::error::Error;
+use std::fmt::Display;
+
+// これの代わりに……
+fn do_the_thing() -&gt; Result&lt;Wow, ()&gt;
+
+// こうして下さい
+fn do_the_thing() -&gt; Result&lt;Wow, DoError&gt;
+
+#[derive(Debug)]
+struct DoError;
+
+impl Display for DoError { /* ... */ }
+impl Error for DoError { /* ... */ }
+#}</code></pre></pre>
+<p><code>Display</code>によって与えられるエラーメッセージは小文字とし、最後に約物は付けないで下さい。
+そして普通は簡潔なものにしてください。</p>
+<p><a href="https://doc.rust-lang.org/std/error/trait.Error.html#tymethod.description"><code>Error::description()</code></a>の返すメッセージはあまり気にする必要はありません。
+<code>description()</code>ではなく常に<code>Display</code>を使ってエラーを表示すべきですから、
+適当に<code>&quot;JSON error&quot;</code>のようなもので十分です。</p>
+<a class="header" href="interoperability.html#標準ライブラリでの例-2" id="標準ライブラリでの例-2"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/str/struct.ParseBoolError.html"><code>ParseBoolError</code></a>は、文字列をboolとしてパースするのに失敗した際、返される型です。</li>
+</ul>
+<a class="header" href="interoperability.html#エラーメッセージの例" id="エラーメッセージの例"><h3>エラーメッセージの例</h3></a>
+<ul>
+<li>&quot;unexpected end of file&quot;</li>
+<li>&quot;provided string was not `true` or `false`&quot;</li>
+<li>&quot;invalid IP address syntax&quot;</li>
+<li>&quot;second time provided was later than self&quot;</li>
+<li>&quot;invalid UTF-8 sequence of {} bytes from index {}&quot;</li>
+<li>&quot;environment variable was not valid unicode: {:?}&quot;</li>
+</ul>
+<p><a id="c-num-fmt"></a></p>
+<a class="header" href="interoperability.html#バイナリ数値型がhex-octal-binaryによるフォーマットをサポートしている-c-num-fmt" id="バイナリ数値型がhex-octal-binaryによるフォーマットをサポートしている-c-num-fmt"><h2>バイナリ数値型が<code>Hex</code>, <code>Octal</code>, <code>Binary</code>によるフォーマットをサポートしている (C-NUM-FMT)</h2></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.UpperHex.html"><code>std::fmt::UpperHex</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.LowerHex.html"><code>std::fmt::LowerHex</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.Octal.html"><code>std::fmt::Octal</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/fmt/trait.Binary.html"><code>std::fmt::Binary</code></a></li>
+</ul>
+<p>これらのトレイトはフォーマット指定子<code>{:X}</code>、<code>{:x}</code>、<code>{:o}</code>、および<code>{:b}</code>を使用した際の
+表現を制御します。</p>
+<p><code>|</code>や<code>&amp;</code>などビット単位での操作が行われる数値型にはこれらのトレイトを実装してください。
+これは特にビットフラグ型において妥当です。
+<code>struct Nanoseconds(u64)</code>のような、量を表す数値型においては必要ないでしょう。</p>
+<p><a id="c-rw-value"></a></p>
+<a class="header" href="interoperability.html#読み書きを行うジェネリックな関数がr-readとw-writeを値渡しで受け取っている-c-rw-value" id="読み書きを行うジェネリックな関数がr-readとw-writeを値渡しで受け取っている-c-rw-value"><h2>読み書きを行うジェネリックな関数が<code>R: Read</code>と<code>W: Write</code>を値渡しで受け取っている (C-RW-VALUE)</h2></a>
+<p>標準ライブラリは次の2つの実装を含んでいます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl&lt;'a, R: Read + ?Sized&gt; Read for &amp;'a mut R { /* ... */ }
+
+impl&lt;'a, W: Write + ?Sized&gt; Write for &amp;'a mut W { /* ... */ }
+#}</code></pre></pre>
+<p>従って、<code>R: Read</code>あるいは<code>W: Write</code>という境界を持つジェネリックなパラメータを値で受け取る関数は、
+必要ならばミュータブルな参照を受け取ることも可能になっています。</p>
+<p>そういった関数のドキュメントには、ミュータブルな参照を渡すこともできると簡単に書いてあるべきです。
+新規のRustユーザが頻繁にこの点に引っ掛かるためです。
+例えば、複数回に渡ってあるファイルからデータを読み出したいにも関わらず、
+関数がreaderを値で受け取るという場合、対処方法の分からないユーザがいます。
+この場合、上記の実装を利用して<code>f</code>の代わりに<code>&amp;mut f</code>を代わりに渡せるというのが答えです。</p>
+<a class="header" href="interoperability.html#例" id="例"><h3>例</h3></a>
+<ul>
+<li><a href="https://docs.rs/flate2/0.2/flate2/read/struct.GzDecoder.html#method.new"><code>flate2::read::GzDecoder::new</code></a></li>
+<li><a href="https://docs.rs/flate2/0.2/flate2/write/struct.GzEncoder.html#method.new"><code>flate2::write::GzEncoder::new</code></a></li>
+<li><a href="https://docs.serde.rs/serde_json/fn.from_reader.html"><code>serde_json::from_reader</code></a></li>
+<li><a href="https://docs.serde.rs/serde_json/fn.to_writer.html"><code>serde_json::to_writer</code></a></li>
+</ul>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="naming.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="macros.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="naming.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="macros.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

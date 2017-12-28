@@ -1,0 +1,391 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>型安全性 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html" class="active"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="type-safety.html#型安全性" id="型安全性"><h1>型安全性</h1></a>
+<p><a id="c-newtype"></a></p>
+<a class="header" href="type-safety.html#newtypeを使って静的に値を区別する-c-newtype" id="newtypeを使って静的に値を区別する-c-newtype"><h2>newtypeを使って静的に値を区別する (C-NEWTYPE)</h2></a>
+<p>実際の型は同じでも、newtypeを用いることでその異なる解釈の間を静的に区別することができます。</p>
+<p>例えば、<code>f64</code>の値はマイルとキロメートルの何れかの量を示しているかもしれません。
+newtypeを使うことで、どちらが正しい解釈なのかを示すことが可能です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+struct Miles(pub f64);
+struct Kilometers(pub f64);
+
+impl Miles {
+    fn to_kilometers(self) -&gt; Kilometers { /* ... */ }
+}
+impl Kilometers {
+    fn to_miles(self) -&gt; Miles { /* ... */ }
+}
+#}</code></pre></pre>
+<p>このように型を分けることで、混ざってしまわないことを静的に保証できます。
+例えば、</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn are_we_there_yet(distance_travelled: Miles) -&gt; bool { /* ... */ }
+#}</code></pre></pre>
+<p>は間違って<code>Kilometers</code>の値で呼ばれることはありません。
+コンパイラが適切な変換を施すことを思い出させてくれるため、<a href="http://en.wikipedia.org/wiki/Mars_Climate_Orbiter">恐ろしいバグ</a>も回避できます。</p>
+<p><a id="c-custom-type"></a></p>
+<a class="header" href="type-safety.html#boolやoptionの代わりに意味のある型を使っている-c-custom-type" id="boolやoptionの代わりに意味のある型を使っている-c-custom-type"><h2><code>bool</code>や<code>Option</code>の代わりに意味のある型を使っている (C-CUSTOM-TYPE)</h2></a>
+<p>こうして下さい。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let w = Widget::new(Small, Round)
+#}</code></pre></pre>
+<p>次は駄目な例です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let w = Widget::new(true, false)
+#}</code></pre></pre>
+<p><code>bool</code>や<code>u8</code>、<code>Option</code>のような汎用的な型には様々な解釈が考えられます。</p>
+<p>専用の型(列挙型、構造体、あるいはタプル)を用い、その意味と不変条件を伝えるようにしてください。
+上記の駄目な例では、引数の名前を調べない限り<code>true</code>と<code>false</code>がどういった意味なのか分かりません。
+<code>Small</code>や<code>Round</code>といった型を使った場合ではその意味が明確になっています。</p>
+<p>専用の型を使うことで今後の拡張も楽になります。上記の例で言うと、
+ここに<code>ExtraLarge</code>というバリアントを追加したりできますね。</p>
+<p>既存の型にゼロコストで区別された名前を付ける方法についてはnewtypeパターン(<a href="type-safety.html#c-newtype">C-NEWTYPE</a>)を参照してください。</p>
+<p><a id="c-bitflag"></a></p>
+<a class="header" href="type-safety.html#フラグの集合を列挙型ではなくbitflagsで表している-c-bitflag" id="フラグの集合を列挙型ではなくbitflagsで表している-c-bitflag"><h2>フラグの集合を列挙型ではなく<code>bitflags</code>で表している (C-BITFLAG)</h2></a>
+<p>Rustでは<code>enum</code>において値を明示することが可能です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+enum Color {
+    Red = 0xff0000,
+    Green = 0x00ff00,
+    Blue = 0x0000ff,
+}
+#}</code></pre></pre>
+<p>値の指定は他のシステムや言語向けに整数値としてシリアライゼーションしないといけない場合に便利です。
+数値でなく<code>Color</code>を関数が取れば、数値への変換が可能であると同時に不正な値の入力が防げるため
+「型安全性」に貢献します。</p>
+<p><code>enum</code>は複数の選択肢のうちの1つを要求するAPIに使われます。
+しかし、APIの入力がフラグの集合である場合もあります。
+C言語のコードでは各々のフラグを特定のビットに割当てることで、1つの整数値によって32あるいは64等のフラグを表せるようにします。
+Rustでは<a href="https://github.com/rust-lang-nursery/bitflags"><code>bitflags</code></a>クレートがこのパターンの型安全な実装を提供しています。</p>
+<pre><pre class="playpen"><code class="language-rust">#[macro_use]
+extern crate bitflags;
+
+bitflags! {
+    struct Flags: u32 {
+        const FLAG_A = 0b00000001;
+        const FLAG_B = 0b00000010;
+        const FLAG_C = 0b00000100;
+    }
+}
+
+fn f(settings: Flags) {
+    if settings.contains(FLAG_A) {
+        println!(&quot;doing thing A&quot;);
+    }
+    if settings.contains(FLAG_B) {
+        println!(&quot;doing thing B&quot;);
+    }
+    if settings.contains(FLAG_C) {
+        println!(&quot;doing thing C&quot;);
+    }
+}
+
+fn main() {
+    f(FLAG_A | FLAG_C);
+}
+</code></pre></pre>
+<p><a id="c-builder"></a></p>
+<a class="header" href="type-safety.html#複雑な値の生成にビルダーパターンを使っている-c-builder" id="複雑な値の生成にビルダーパターンを使っている-c-builder"><h2>複雑な値の生成にビルダーパターンを使っている (C-BUILDER)</h2></a>
+<p>以下のような理由によって、データ構造の生成に複雑な手順が必要なことがあります。</p>
+<ul>
+<li>多数の入力がある</li>
+<li>複合的なデータである (例えばスライス)</li>
+<li>オプショナルな設定データがある</li>
+<li>選択肢が複数ある</li>
+</ul>
+<p>こんなとき、異なった引数をもつ多数のコンストラクタを追加してしまいがちです。</p>
+<p>そういったデータ構造<code>T</code>があるとき、<code>T</code>に <em>ビルダー</em> を用意することを検討してください。</p>
+<ol>
+<li>インクリメンタルに<code>T</code>を設定するための別のデータ型、<code>TBuilder</code>を作ります。
+可能であれば、より明瞭な名前を選んでください。例えば、<a href="https://doc.rust-lang.org/std/process/struct.Child.html">子プロセス</a>を作成するビルダーの
+<a href="https://doc.rust-lang.org/std/process/struct.Command.html"><code>Command</code></a>、<a href="https://docs.rs/url/1.4.0/url/struct.Url.html"><code>Url</code></a>を作成するビルダーの<a href="https://docs.rs/url/1.4.0/url/struct.ParseOptions.html"><code>ParseOptions</code></a>のようにです。</li>
+<li>ビルダー自体のコンストラクタは、<code>T</code>を生成するために <em>必須</em> のパラメータのみ取るべきです。</li>
+<li>ビルダーは設定を行うための便利なメソッドを提供するべきです。
+例えば、複合的なデータをインクリメンタルに設定できるようなものです。
+メソッドは<code>self</code>を返して、メソッドチェーンを行えるようにすべきです。</li>
+<li>ビルダーは実際に<code>T</code>の値を生成する「終端」メソッドを1つ以上提供すべきです。</li>
+</ol>
+<p>ビルダーパターンは特に、<code>T</code>の生成においてプロセスやタスクの立ち上げのような副作用が生じる場合にも適しています。</p>
+<p>Rustでのビルダーパターンの作り方には、所有権の取り扱いによって以下で示す2通りの方法があります。</p>
+<a class="header" href="type-safety.html#非消費ビルダー-推奨" id="非消費ビルダー-推奨"><h3>非消費ビルダー (推奨)</h3></a>
+<p>最終的な<code>T</code>の生成にビルダー自身を必要としない場合があります。
+例として<a href="https://doc.rust-lang.org/std/process/struct.Command.html"><code>std::process::Command</code></a>を挙げます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// NOTE: 実際のCommand APIはStringを所有しません。
+// これは単純化されたバージョンです
+
+pub struct Command {
+    program: String,
+    args: Vec&lt;String&gt;,
+    cwd: Option&lt;String&gt;,
+    // etc
+}
+
+impl Command {
+    pub fn new(program: String) -&gt; Command {
+        Command {
+            program: program,
+            args: Vec::new(),
+            cwd: None,
+        }
+    }
+
+    /// Add an argument to pass to the program.
+    pub fn arg(&amp;mut self, arg: String) -&gt; &amp;mut Command {
+        self.args.push(arg);
+        self
+    }
+
+    /// Add multiple arguments to pass to the program.
+    pub fn args(&amp;mut self, args: &amp;[String]) -&gt; &amp;mut Command {
+        self.args.extend_from_slice(args);
+        self
+    }
+
+    /// Set the working directory for the child process.
+    pub fn current_dir(&amp;mut self, dir: String) -&gt; &amp;mut Command {
+        self.cwd = Some(dir);
+        self
+    }
+
+    /// Executes the command as a child process, which is returned.
+    pub fn spawn(&amp;self) -&gt; io::Result&lt;Child&gt; {
+        /* ... */
+    }
+}
+#}</code></pre></pre>
+<p>ビルダーの設定データを使って実際にプロセスを立ち上げる<code>spawn</code>メソッドが、
+ビルダーを不変参照で受け取っていることに注目してください。
+これはプロセスの立ち上げにビルダーの設定データの所有権が必要ないからです。</p>
+<p>終端メソッドである<code>spawn</code>が参照しか必要としないのですから、
+設定メソッドは<code>self</code>を参照で受け取り、返すべきです。</p>
+<a class="header" href="type-safety.html#利点" id="利点"><h4>利点</h4></a>
+<p>借用を使うことで、<code>Command</code>はワンライナーでも、もっと複雑なことをする場合でも
+どちらにでも使うことができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// One-liners
+Command::new(&quot;/bin/cat&quot;).arg(&quot;file.txt&quot;).spawn();
+
+// Complex configuration
+let mut cmd = Command::new(&quot;/bin/ls&quot;);
+cmd.arg(&quot;.&quot;);
+if size_sorted {
+    cmd.arg(&quot;-S&quot;);
+}
+cmd.spawn();
+#}</code></pre></pre>
+<a class="header" href="type-safety.html#消費ビルダー" id="消費ビルダー"><h3>消費ビルダー</h3></a>
+<p>ビルダーが<code>T</code>を生成する際に、所有権を移動しなければならない場合があります。
+つまり終端メソッドが<code>&amp;self</code>ではなく<code>self</code>を取るときです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl TaskBuilder {
+    /// Name the task-to-be.
+    pub fn named(mut self, name: String) -&gt; TaskBuilder {
+        self.name = Some(name);
+        self
+    }
+
+    /// Redirect task-local stdout.
+    pub fn stdout(mut self, stdout: Box&lt;io::Write + Send&gt;) -&gt; TaskBuilder {
+        self.stdout = Some(stdout);
+        self
+    }
+
+    /// Creates and executes a new child task.
+    pub fn spawn&lt;F&gt;(self, f: F) where F: FnOnce() + Send {
+        /* ... */
+    }
+}
+#}</code></pre></pre>
+<p>ここで、<code>stdout</code>を設定するときには<code>io::Write</code>を実装する型の所有権が渡されるため、
+タスクの生成を行う際にその所有権を移動する必要があります(<code>spawn</code>内)。</p>
+<p>ビルダーの終端メソッドが所有権を要求するとき、大きなトレードオフが存在します。</p>
+<ul>
+<li>
+<p>もし他のビルダーメソッドが可変借用を受け渡すと、
+前述した複雑な設定の場合は上手く動きますが、ワンライナーでの設定は不可能になります。</p>
+</li>
+<li>
+<p>もし他のビルダーメソッドが<code>self</code>の所有権を受け渡すと、
+ワンライナーはそのまま動きますが、複雑な設定を行う際には不便です。</p>
+</li>
+</ul>
+<p>簡単なものは簡単なまま保つべきですから、
+消費ビルダーのビルダーメソッドは全て<code>self</code>を取り、返すべきです。
+このビルダーを使用するコードは次のようになります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// One-liners
+TaskBuilder::new(&quot;my_task&quot;).spawn(|| { /* ... */ });
+
+// Complex configuration
+let mut task = TaskBuilder::new();
+task = task.named(&quot;my_task_2&quot;); // must re-assign to retain ownership
+if reroute {
+    task = task.stdout(mywriter);
+}
+task.spawn(|| { /* ... */ });
+#}</code></pre></pre>
+<p>所有権が<code>spawn</code>に消費されるまで各メソッド間で次々と受け渡され、ワンライナーは今までどおり動きます。
+一方で、複雑な設定は記述量が増えています。各メソッドを呼ぶ際に再束縛が必要になります。</p>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="flexibility.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="dependability.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="flexibility.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="dependability.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

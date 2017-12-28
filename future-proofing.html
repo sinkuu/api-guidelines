@@ -1,0 +1,307 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>将来性 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html" class="active"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="future-proofing.html#将来性" id="将来性"><h1>将来性</h1></a>
+<p><a id="c-sealed"></a></p>
+<a class="header" href="future-proofing.html#sealedトレイトを使って下流の実装を適切に防いでいる-c-sealed" id="sealedトレイトを使って下流の実装を適切に防いでいる-c-sealed"><h2>sealedトレイトを使って下流の実装を適切に防いでいる (C-SEALED)</h2></a>
+<p>そのクレート内でのみ実装されることを想定したトレイトについて、
+sealedトレイトパターンを用いることでユーザのコードを壊すことなしに変更を加えることが可能になります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+/// このトレイトはsealされているため、他のクレートで実装を追加することはできません。
+pub trait TheTrait: private::Sealed {
+    // メソッド
+    fn ...();
+
+    // ユーザが呼ぶべきでないプライベートメソッド
+    #[doc(hidden)]
+    fn ...();
+}
+
+// 実装
+impl TheTrait for usize {
+    /* ... */
+}
+
+mod private {
+    pub trait Sealed {}
+
+    // 同じ型に実装
+    impl Sealed for usize {}
+}
+#}</code></pre></pre>
+<p>プライベートな空の<code>Sealed</code>親トレイトを下流のクレートから参照することはできません。
+従って、<code>Sealed</code>(そして<code>TheTrait</code>)の実装はこのクレート内にのみ存在できます。
+トレイトにメソッドを追加することは一般的に破壊的変更となりますが、
+sealedトレイトである<code>TheTrait</code>にメソッドを追加することは破壊的変更になりません。
+また、ドキュメントに掲載されていないメソッドの定義も自由に変更することができます。</p>
+<p>sealedトレイトからパブリックなメソッドを取り除いたり、
+定義を変更したりすることは依然として破壊的変更であることに注意してください。</p>
+<p>混乱したユーザがそれらのトレイトを実装しようとすることを防ぐため、
+そのトレイトはsealされており、他のクレートから実装されるべきものではないことを
+ドキュメントに記載しておくべきです。</p>
+<a class="header" href="future-proofing.html#例" id="例"><h3>例</h3></a>
+<ul>
+<li><a href="https://docs.serde.rs/serde_json/value/trait.Index.html"><code>serde_json::value::Index</code></a></li>
+<li><a href="https://docs.rs/byteorder/1.1.0/byteorder/trait.ByteOrder.html"><code>byteorder::ByteOrder</code></a></li>
+</ul>
+<p><a id="c-struct-private"></a></p>
+<a class="header" href="future-proofing.html#構造体のフィールドを適切にプライベートにする-c-struct-private" id="構造体のフィールドを適切にプライベートにする-c-struct-private"><h2>構造体のフィールドを適切にプライベートにする (C-STRUCT-PRIVATE)</h2></a>
+<p>構造体のフィールドをパブリックにすることには重大な責任が伴います。
+表現を変更することはできなくなり、またユーザはフィールドを自由に弄ることができるため
+値のバリデーションや不変条件の検証などができなくなります。</p>
+<p>パブリックなフィールドはC言語的な意味あいの<code>sturct</code>、すなわち複合化された受け身のデータ構造には最適ですが、
+それ以外ではgetter/setterメソッドを用意しフィールドを隠蔽することを考慮してください。</p>
+<p><a id="c-newtype-hide"></a></p>
+<a class="header" href="future-proofing.html#newtypeを用いて実装詳細を隠蔽している-c-newtype-hide" id="newtypeを用いて実装詳細を隠蔽している-c-newtype-hide"><h2>newtypeを用いて実装詳細を隠蔽している (C-NEWTYPE-HIDE)</h2></a>
+<p>newtypeはユーザへの保証を保ちつつ実装詳細を隠蔽するために役立ちます。</p>
+<p>例としてこの、イテレータ型を返す<code>my_transform</code>関数を見てください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+use std::iter::{Enumerate, Skip};
+
+pub fn my_transform&lt;I: Iterator&gt;(input: I) -&gt; Enumerate&lt;Skip&lt;I&gt;&gt; {
+    input.skip(3).enumerate()
+}
+#}</code></pre></pre>
+<p>ユーザから見た際に<code>Iterator&lt;Item = (usize, T)&gt;</code>のように見えるよう型を隠したいときは、
+newtype型を使うことができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+use std::iter::{Enumerate, Skip};
+
+pub struct MyTransformResult&lt;I&gt;(Enumerate&lt;Skip&lt;I&gt;&gt;);
+
+impl&lt;I: Iterator&gt; Iterator for MyTransformResult&lt;I&gt; {
+    type Item = (usize, I::Item);
+
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        self.0.next()
+    }
+}
+
+pub fn my_transform&lt;I: Iterator&gt;(input: I) -&gt; MyTransformResult&lt;I&gt; {
+    MyTransformResult(input.skip(3).enumerate())
+}
+#}</code></pre></pre>
+<p>これにより宣言が簡単になるだけでなく、ユーザへの保証を小さくすることができます。
+ユーザは返されたイテレータがどのように生成されたのか、どのような内部表現になっているのかを知ることができません。
+したがって、ユーザのコードを壊すこと無く将来的に内部表現を変更できるようになります。</p>
+<p><a href="https://github.com/rust-lang/rfcs/blob/master/text/1522-conservative-impl-trait.md"><code>impl Trait</code></a>は現在のところunstableですが、将来的にはこれを用いても同じことが達成できるようになります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![feature(conservative_impl_trait)]
+
+#fn main() {
+pub fn my_transform&lt;I: Iterator&gt;(input: I) -&gt; impl Iterator&lt;Item = (usize, I::Item)&gt; {
+    input.skip(3).enumerate()
+}
+#}</code></pre></pre>
+<p><a id="c-struct-bounds"></a></p>
+<a class="header" href="future-proofing.html#データ構造にderiveしたトレイトの境界を定義で繰り返さない-c-struct-bounds" id="データ構造にderiveしたトレイトの境界を定義で繰り返さない-c-struct-bounds"><h2>データ構造にderiveしたトレイトの境界を定義で繰り返さない (C-STRUCT-BOUNDS)</h2></a>
+<p>ジェネリックなデータ構造はderiveしたトレイト境界をその定義において繰り返すべきではありません。
+<code>derive</code>属性によって実装されたトレイトは、ジェネリック型がそのトレイトを実装している場合のみ実装される
+個別の<code>impl</code>ブロックに展開されます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 良い例:
+#[derive(Clone, Debug, PartialEq)]
+struct Good&lt;T&gt; { /* ... */ }
+
+// 悪い例:
+#[derive(Clone, Debug, PartialEq)]
+struct Bad&lt;T: Clone + Debug + PartialEq&gt; { /* ... */ }
+#}</code></pre></pre>
+<p><code>Bad</code>のようにderiveしたトレイトを境界として繰り返すのは不要であり、
+しかも後方互換性を保つ上で困難となります。
+なぜなら、ここで<code>PartialOrd</code>をderiveした場合を考えてみて下さい。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// 非破壊的変更:
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+struct Good&lt;T&gt; { /* ... */ }
+
+// 破壊的変更:
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+struct Bad&lt;T: Clone + Debug + PartialEq + PartialOrd&gt; { /* ... */ }
+#}</code></pre></pre>
+<p>一般的に、データ構造にトレイト境界を追加すると全ての利用箇所において追加の境界を満たす必要が発生するため、
+破壊的変更となります。
+しかし、<code>derive</code>属性を用いて標準ライブラリのトレイトを実装することは破壊的変更となりません。</p>
+<p>以下のトレイトはデータ構造において境界とするべきではありません。</p>
+<ul>
+<li><code>Clone</code></li>
+<li><code>PartialEq</code></li>
+<li><code>PartialOrd</code></li>
+<li><code>Debug</code></li>
+<li><code>Display</code></li>
+<li><code>Default</code></li>
+<li><code>Serialize</code></li>
+<li><code>Deserialize</code></li>
+<li><code>DeserializeOwned</code></li>
+</ul>
+<p><code>Read</code>や<code>Write</code>のようなderiveできないトレイトの中には、
+厳密にはデータ構造によって要求されないグレーゾーンのものが存在します。
+これらは型のふるまいを伝える役に立つ可能性がありますが、一方で将来的な拡張性の障害にもなります。
+しかし、deriveできるトレイトを境界に追加するよりは問題が少ないでしょう。</p>
+<a class="header" href="future-proofing.html#例外" id="例外"><h3>例外</h3></a>
+<p>データ構造にトレイト境界が必要となる、3つの例外があります。</p>
+<ol>
+<li>データ構造がトレイトの関連型を参照している。</li>
+<li><code>?Sized</code>境界。</li>
+<li>データ構造がそのトレイト境界を必要とする<code>Drop</code>実装を持っている。Rustは現在、
+<code>Drop</code>実装の境界がデータ構造自身にもすることを要求します。</li>
+</ol>
+<a class="header" href="future-proofing.html#標準ライブラリでの例" id="標準ライブラリでの例"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/borrow/enum.Cow.html"><code>std::borrow::Cow</code></a>は<code>Borrow</code>トレイトの関連型を参照しています。</li>
+<li><a href="https://doc.rust-lang.org/std/boxed/struct.Box.html"><code>std::boxed::Box</code></a>は暗黙の<code>Sized</code>境界を除いています。</li>
+<li><a href="https://doc.rust-lang.org/std/io/struct.BufWriter.html"><code>std::io::BufWriter</code></a>は<code>Drop</code>実装に必要である境界を型に要求します。</li>
+</ul>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="debuggability.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="necessities.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="debuggability.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="necessities.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

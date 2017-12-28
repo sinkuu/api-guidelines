@@ -1,0 +1,306 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>予測性 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html" class="active"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="predictability.html#予測性" id="予測性"><h1>予測性</h1></a>
+<p><a id="c-smart-ptr"></a></p>
+<a class="header" href="predictability.html#スマートポインタがinherentメソッドを持っていない-c-smart-ptr" id="スマートポインタがinherentメソッドを持っていない-c-smart-ptr"><h2>スマートポインタがinherentメソッドを持っていない (C-SMART-PTR)</h2></a>
+<p>例えば、<a href="https://doc.rust-lang.org/std/boxed/struct.Box.html#method.into_raw"><code>Box::into_raw</code></a>は次のように定義されています。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl&lt;T&gt; Box&lt;T&gt; where T: ?Sized {
+    fn into_raw(b: Box&lt;T&gt;) -&gt; *mut T { /* ... */ }
+}
+
+let boxed_str: Box&lt;str&gt; = /* ... */;
+let ptr = Box::into_raw(boxed_str);
+#}</code></pre></pre>
+<p>もしこれがinherentメソッドであったら、呼び出そうとしているメソッドが<code>T</code>のものなのか
+<code>Box&lt;T&gt;</code>のものなのか区別が付かなくなります。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl&lt;T&gt; Box&lt;T&gt; where T: ?Sized {
+    // Do not do this.
+    fn into_raw(self) -&gt; *mut T { /* ... */ }
+}
+
+let boxed_str: Box&lt;str&gt; = /* ... */;
+
+// スマートポインタのDerefを経由してstrのメソッドにアクセスしている
+boxed_str.chars()
+
+// これは`Box&lt;str&gt;`のメソッド……?
+boxed_str.into_raw()
+#}</code></pre></pre>
+<p><a id="c-conv-specific"></a></p>
+<a class="header" href="predictability.html#変換メソッドが最も関係の深い型に付いている-c-conv-specific" id="変換メソッドが最も関係の深い型に付いている-c-conv-specific"><h2>変換メソッドが最も関係の深い型に付いている (C-CONV-SPECIFIC)</h2></a>
+<p>迷ったら<code>_from</code>よりも<code>to_</code>/<code>as_</code>/<code>into_</code>を選んでください。
+後者の方がより使いやすく、また他のメソッドにチェーンすることもできるからです。</p>
+<p>2つの型の間の変換において、多くの場合どちらか一方が明らかに特徴的です。
+すなわち、他方にはない不変条件や解釈が追加されています。
+例えば<a href="https://doc.rust-lang.org/std/primitive.str.html"><code>str</code></a>はUTF-8でエンコードされたバイト列ですから、単なるバイト列である<code>&amp;[u8]</code>より特徴的です。</p>
+<p>変換メソッドは、関係する型の中で、より特徴的なものが持つべきです。
+従って、<code>str</code>は<a href="https://doc.rust-lang.org/std/primitive.str.html#method.as_bytes"><code>as_bytes</code></a>メソッド及び<a href="https://doc.rust-lang.org/std/str/fn.from_utf8.html"><code>from_utf8</code></a>コンストラクタを持つのです。
+この方が直感的であるだけでなく、<code>&amp;[u8]</code>のような型が無数の変換メソッドで汚染されていくという事態が避けられます。</p>
+<p><a id="c-method"></a></p>
+<a class="header" href="predictability.html#明確なレシーバを持つ関数がメソッドになっている-c-method" id="明確なレシーバを持つ関数がメソッドになっている-c-method"><h2>明確なレシーバを持つ関数がメソッドになっている (C-METHOD)</h2></a>
+<p>特定の型と強く関連した操作についてはメソッドにしてください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl Foo {
+    pub fn frob(&amp;self, w: widget) { /* ... */ }
+}
+#}</code></pre></pre>
+<p>関数にしてはいけません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn frob(foo: &amp;Foo, w: widget) { /* ... */ }
+#}</code></pre></pre>
+<p>関数でなくメソッドを選ぶことには多数の利点があります。</p>
+<ul>
+<li>インポートしたり関数へのパスを記述したりする必要がない。その型の値さえあれば必要な操作ができます。</li>
+<li>呼び出し時に自動借用が働きます。 (可変借用も含めて)</li>
+<li>「この型<code>T</code>で何ができるんだろう」という疑問への答えが簡単になります。 (特にrustdocを使用している場合)</li>
+<li><code>self</code>記法が使われるため、より簡潔かつ明白に所有権の区別が示されます。</li>
+</ul>
+<p><a id="c-no-out"></a></p>
+<a class="header" href="predictability.html#関数がoutパラメータを持たない-c-no-out" id="関数がoutパラメータを持たない-c-no-out"><h2>関数がoutパラメータを持たない (C-NO-OUT)</h2></a>
+<p>例えば複数の<code>Bar</code>を返すときはこのようにしてください。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo() -&gt; (Bar, Bar)
+#}</code></pre></pre>
+<p>このようにoutパラメータのようなものを取ってはいけません。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn foo(output: &amp;mut Bar) -&gt; Bar
+#}</code></pre></pre>
+<p>タプルや構造体を使って複数の値を返しても効率のよいコードにコンパイルされますし、
+ヒープの確保も行われません。複数の値を返す必要があるならこれらの型を利用すべきです。</p>
+<p>例外は関数が呼び出し側の所有するデータを変更する場合です。
+例えば、バッファの再利用をする場合は次のようになるでしょう。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn read(&amp;mut self, buf: &amp;mut [u8]) -&gt; io::Result&lt;usize&gt;
+#}</code></pre></pre>
+<p><a id="c-overload"></a></p>
+<a class="header" href="predictability.html#奇妙な演算子オーバーロードを行っていない-c-overload" id="奇妙な演算子オーバーロードを行っていない-c-overload"><h2>奇妙な演算子オーバーロードを行っていない (C-OVERLOAD)</h2></a>
+<p>組み込みの演算子(<code>*</code>や<code>|</code>など)は<a href="https://doc.rust-lang.org/std/ops/index.html#traits"><code>std::ops</code></a>にあるトレイトを実装することで使えるようになります。
+これらの演算子には元から意味が付与されています。
+例えば、<code>Mul</code>は乗算のような(そして結合性などの特性を共有した)演算にのみ実装されるべきです。</p>
+<p><a id="c-deref"></a></p>
+<a class="header" href="predictability.html#derefとderefmutを実装しているのはスマートポインタだけである-c-deref" id="derefとderefmutを実装しているのはスマートポインタだけである-c-deref"><h2><code>Deref</code>と<code>DerefMut</code>を実装しているのはスマートポインタだけである (C-DEREF)</h2></a>
+<p><code>Deref</code>トレイトはコンパイラによって様々な状況で暗黙的に使われ、メソッドの解決と関わります。
+その周辺の規則はスマートポインタを念頭において設計されているため、
+これらのトレイトはスマートポインタに対してのみ実装されるべきです。</p>
+<a class="header" href="predictability.html#標準ライブラリでの例" id="標準ライブラリでの例"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/boxed/struct.Box.html"><code>Box&lt;T&gt;</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/string/struct.String.html"><code>String</code></a>は<a href="https://doc.rust-lang.org/std/primitive.str.html"><code>str</code></a>を指すスマートポインタ</li>
+<li><a href="https://doc.rust-lang.org/std/rc/struct.Rc.html"><code>Rc&lt;T&gt;</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/sync/struct.Arc.html"><code>Arc&lt;T&gt;</code></a></li>
+<li><a href="https://doc.rust-lang.org/std/borrow/enum.Cow.html"><code>Cow&lt;'a, T&gt;</code></a></li>
+</ul>
+<p><a id="c-ctor"></a></p>
+<a class="header" href="predictability.html#コンストラクタはスタティックなinherentメソッドである-c-ctor" id="コンストラクタはスタティックなinherentメソッドである-c-ctor"><h2>コンストラクタはスタティックなinherentメソッドである (C-CTOR)</h2></a>
+<p>Rustにおいて、「コンストラクタ」は単なる慣習に過ぎません。
+コンストラクタの命名には様々な慣習があり、その区別が分かり辛いことが多々あります。</p>
+<p>最も基本的なコンストラクタの形は引数のない<code>new</code>メソッドです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl&lt;T&gt; Example&lt;T&gt; {
+    pub fn new() -&gt; Example&lt;T&gt; { /* ... */ }
+}
+#}</code></pre></pre>
+<p>コンストラクタは、その生成する型のスタティック(<code>self</code>を取らない)なinherentメソッドです。
+型をインポートする慣習と併せれば、分かりやすく簡潔にその型を生成することができます。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+use example::Example;
+
+// Construct a new Example.
+let ex = Example::new();
+#}</code></pre></pre>
+<p><code>new</code>という名前は、1つ目の最も重要なコンストラクタに使われるべきです。
+上記の例のように引数を取らないこともあれば、<code>Box</code>に入れる値を取る<a href="https://doc.rust-lang.org/stable/std/boxed/struct.Box.html#method.new"><code>Box::new</code></a>のように、
+引数を取ることもあります。</p>
+<p>主にI/Oリソースを表す型では、<a href="https://doc.rust-lang.org/stable/std/fs/struct.File.html#method.open"><code>File::open</code></a>、<a href="https://docs.rs/memmap/0.5.2/memmap/struct.Mmap.html#method.open"><code>Mmap::open</code></a>、
+<a href="https://doc.rust-lang.org/stable/std/net/struct.TcpStream.html#method.connect"><code>TcpStream::connect</code></a>、あるいは <a href="https://doc.rust-lang.org/stable/std/net/struct.UdpSocket.html#method.bind"><code>UpdSocket::bind</code></a>のように
+コンストラクタの命名が異なっていることがあります。
+これらは、各々の領域で適した名前が選ばれています。</p>
+<p>ある型の値を生成する方法が複数存在することは多くあります。
+そういった場合、2個目以降のコンストラクタには<code>_with_foo</code>などと名前の最後に付けることが一般的です。
+例えば、<a href="https://docs.rs/memmap/0.5.2/memmap/struct.Mmap.html#method.open_with_offset"><code>Mmap::open_with_offset</code></a>などです。
+複数のオプションがあるならばビルダーパターン(<a href="type-safety.html#c-builder">C-BUILDER</a>)の使用も考えてください。</p>
+<p>別の型の値を取って変換を行うコンストラクタというものもあります。
+それらは<a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.from_raw_os_error"><code>std::io::Error::from_raw_os_error</code></a>のように、一般に<code>from_</code>から始まる名前を持ちます。
+ここで、よく似たものに<code>From</code>トレイト(<a href="interoperability.html#c-conv-traits">C-CONV-TRAITS</a>)が存在します。
+<code>from_</code>の付いた変換コンストラクタと<code>From&lt;T&gt;</code>実装の間には3つの相違点があります。</p>
+<ul>
+<li><code>from_</code>コンストラクタはunsafeにすることができますが、<code>From</code>の実装ではできません。
+例: <a href="https://doc.rust-lang.org/std/boxed/struct.Box.html#method.from_raw"><code>Box::from_raw</code></a>。</li>
+<li><code>from_</code>コンストラクタは、<a href="https://doc.rust-lang.org/std/primitive.u64.html#method.from_str_radix"><code>u64::from_str_radix</code></a>のように
+元になるデータを区別するための追加の引数を取ることができます。</li>
+<li><code>From</code>実装は元のデータから出力の型のエンコード方法を決定できる場合にのみ適しています。
+<a href="https://doc.rust-lang.org/std/primitive.u64.html#method.from_be"><code>u64::from_be</code></a>や<a href="https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8"><code>String::from_utf8</code></a>のように入力の型が単なるデータ列であるとき、
+コンストラクタの名前によってその意味を伝えることが可能です。</li>
+</ul>
+<a class="header" href="predictability.html#標準ライブラリでの例-1" id="標準ライブラリでの例-1"><h3>標準ライブラリでの例</h3></a>
+<ul>
+<li><a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.new"><code>std::io::Error::new</code></a>はIOエラーの生成に使われるコンストラクタ</li>
+<li><a href="https://doc.rust-lang.org/std/io/struct.Error.html#method.from_raw_os_error"><code>std::io::Error::from_raw_os_error</code></a>は
+OSから与えられたエラーコードを変換するコンストラクタ</li>
+<li><a href="https://doc.rust-lang.org/stable/std/boxed/struct.Box.html#method.new"><code>Box::new</code></a>は引数を1つとり、コンテナ型を生成するコンストラクタ</li>
+<li><a href="https://doc.rust-lang.org/stable/std/fs/struct.File.html#method.open"><code>File::open</code></a>はファイルをオープンする</li>
+<li><a href="https://docs.rs/memmap/0.5.2/memmap/struct.Mmap.html#method.open_with_offset"><code>Mmap::open_with_offset</code></a>は指定されたオプションでメモリーマップをオープンする</li>
+</ul>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="documentation.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="flexibility.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="documentation.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="flexibility.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

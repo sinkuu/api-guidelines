@@ -1,0 +1,221 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>必要事項 - Rust APIガイドライン</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li class="affix"><a href="about.html">概要</a></li><li class="affix"><a href="checklist.html">チェックリスト</a></li><li><a href="naming.html"><strong>1.</strong> 命名</a></li><li><a href="interoperability.html"><strong>2.</strong> 相互運用性</a></li><li><a href="macros.html"><strong>3.</strong> マクロ</a></li><li><a href="documentation.html"><strong>4.</strong> ドキュメンテーション</a></li><li><a href="predictability.html"><strong>5.</strong> 予測性</a></li><li><a href="flexibility.html"><strong>6.</strong> 柔軟性</a></li><li><a href="type-safety.html"><strong>7.</strong> 型安全性</a></li><li><a href="dependability.html"><strong>8.</strong> 信頼性</a></li><li><a href="debuggability.html"><strong>9.</strong> デバッガビリティ</a></li><li><a href="future-proofing.html"><strong>10.</strong> 将来性</a></li><li><a href="necessities.html" class="active"><strong>11.</strong> 必要事項</a></li><li class="affix"><a href="external-links.html">外部リンク</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Rust APIガイドライン</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="necessities.html#必要事項" id="必要事項"><h1>必要事項</h1></a>
+<p><a id="c-stable"></a></p>
+<a class="header" href="necessities.html#stableなクレートのパブリックな依存クレートがstableである-c-stable" id="stableなクレートのパブリックな依存クレートがstableである-c-stable"><h2>stableなクレートのパブリックな依存クレートがstableである (C-STABLE)</h2></a>
+<p>全てのパブリックな依存クレートがstable(&gt;=1.0.0)とならない限り、クレートをstableにすることはできません。</p>
+<p>パブリックな依存性は、依存先に由来する型がそのクレートのパブリックなAPIに使われているものです。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn do_my_thing(arg: other_crate::TheirThing) { /* ... */ }
+#}</code></pre></pre>
+<p>この関数を含むクレートは、<code>other_crate</code>がstableにならない限りstableになりません。</p>
+<p>パブリックな依存制は思わぬ所に潜んでいることがあるため、注意が必要です。</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub struct Error {
+    private: ErrorImpl,
+}
+
+enum ErrorImpl {
+    Io(io::Error),
+    // ErrorImplはプライベートなので、other_crateがstableでなくても問題ないはず。
+    Dep(other_crate::Error),
+}
+
+// いや、ここでother_crateをパブリックなAPIの一部にしてしまっている。
+impl From&lt;other_crate::Error&gt; for Error {
+    fn from(err: other_crate::Error) -&gt; Self {
+        Error { private: ErrorImpl::Dep(err) }
+    }
+}
+#}</code></pre></pre>
+<p><a id="c-permissive"></a></p>
+<a class="header" href="necessities.html#クレートとその依存先がpermissiveなライセンスの下にある-c-permissive" id="クレートとその依存先がpermissiveなライセンスの下にある-c-permissive"><h2>クレートとその依存先がpermissiveなライセンスの下にある (C-PERMISSIVE)</h2></a>
+<p>Rustプロジェクトによって公開されているソフトウェアは<a href="https://github.com/rust-lang/rust/blob/master/LICENSE-MIT">MIT</a>と<a href="https://github.com/rust-lang/rust/blob/master/LICENSE-APACHE">Apache 2.0</a>
+のデュアルライセンス下にあります。
+Rustエコシステムとの最大の協調性が必要なクレートは同じようにするべきです。
+その他の選択肢も以下に提示します。</p>
+<p>Rustのライセンスに関しては<a href="https://www.rust-lang.org/en-US/faq.html#why-a-dual-mit-asl2-license">Rust FAQ</a>で幾分かの言及がなされていますが、
+このAPIガイドラインでは詳しい説明は行いません。
+これはライセンスに関する解説ではなく、Rustとの協調性に関するガイドラインだからです。</p>
+<p>Rustと同等のライセンスをあなたのプロジェクトに適用したい場合、次のように
+<code>Cargo.toml</code>中の<code>license</code>フィールドを設定してください。</p>
+<pre><code class="language-toml">[package]
+name = &quot;...&quot;
+version = &quot;...&quot;
+authors = [&quot;...&quot;]
+license = &quot;MIT/Apache-2.0&quot;
+</code></pre>
+<p>そして、README.mdの最後に以下を追加してください。</p>
+<pre><code>## License
+
+Licensed under either of
+
+ * Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
+</code></pre>
+<p>MIT/Apache-2.0のデュアルライセンスの他に、Rustのクレート開発者によってよく使われるのは
+MITやBSDのようなpermissiveなライセンスを単体で利用することです。
+このやり方でも、小さな制約が加わってしまうだけでRustとの互換性はあります。</p>
+<p>Rustとの完全なライセンス互換性が必要なら、Apacheライセンス単体を用いることは推奨されません。
+Apacheライセンスはpermissiveではありますが、MITやBSDより大きな制約を課しているため、
+デュアルライセンスのRust本体は使うことができるにも関わらず
+Apacheライセンスのみのソフトウェアを使うことのできない状況が存在するからです。</p>
+<p>クレートの依存先のライセンスはクレート自身の配布にも制約を与える可能性があるため、
+permissiveなライセンスのクレートはpermissiveなライセンスのクレートにのみ依存するべきです。</p>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="future-proofing.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="external-links.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="future-proofing.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="external-links.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>
