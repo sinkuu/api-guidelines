@@ -35,7 +35,7 @@ fn are_we_there_yet(distance_travelled: Miles) -> bool { /* ... */ }
 
 
 <a id="c-custom-type"></a>
-## `bool`や`Option`の代わりに意味のある型を使う (C-CUSTOM-TYPE)
+## `bool`や`Option`の代わりに意味のある型を使っている (C-CUSTOM-TYPE)
 
 こうして下さい。
 
@@ -64,7 +64,7 @@ let w = Widget::new(true, false)
 
 
 <a id="c-bitflag"></a>
-## フラグの集合は、列挙型ではなく`bitflags`で表す (C-BITFLAG)
+## フラグの集合を列挙型ではなく`bitflags`で表している (C-BITFLAG)
 
 Rustでは`enum`において値を明示することが可能です。
 
@@ -118,7 +118,7 @@ fn main() {
 
 
 <a id="c-builder"></a>
-## 複雑な値の生成にはビルダーパターンを使う (C-BUILDER)
+## 複雑な値の生成にビルダーパターンを使っている (C-BUILDER)
 
 以下のような理由によって、データ構造の生成に複雑な手順が必要なことがあります。
 

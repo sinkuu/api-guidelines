@@ -60,7 +60,7 @@ Rustのトレイトシステムは _孤立_ を許容しません。
 - `From<u16>`が`u32`に実装されています。幅の小さい整数は常に幅の大きい整数に変換可能であるためです。
 - `From<u32>`は`u16`に実装されて*いません*。数値が大きすぎると変換できないためです。
 - `TryFrom<u32>`が`u16`に実装されており、`u16`に収まらないほど数値が大きければエラーを返します。
-- [`From<Ipv6Addr>`]が[`IpAddr`]に実装されている。この型はv4とv6の両方のIPアドレスを表すことができます。
+- [`From<Ipv6Addr>`]が[`IpAddr`]に実装されています。この型はv4とv6の両方のIPアドレスを表すことができます。
 
 [`From<Ipv6Addr>`]: https://doc.rust-lang.org/std/net/struct.Ipv6Addr.html
 [`IpAddr`]: https://doc.rust-lang.org/std/net/enum.IpAddr.html
@@ -79,7 +79,7 @@ Rustのトレイトシステムは _孤立_ を許容しません。
 - [`Iterator::partition`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.partition)
 - [`Iterator::unzip`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.unzip)
 
-`FromIterator`はイテレータが含んでいる値からコレクションを生成するもので、ます。
+`FromIterator`はイテレータが含んでいる値からコレクションを生成するものです。
 `Extend`は既存のコレクションにイテレータの含む値を追加します。
 
 ### 標準ライブラリでの例

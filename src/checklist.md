@@ -41,8 +41,8 @@
   - <input type="checkbox"/> 無用な実装詳細がRustdocに表示されていない ([C-HIDDEN])
 - **予測性** *(クレートを使い、見かけ通りに動作する読みやすいコードが書ける)*
   - <input type="checkbox"/> スマートポインタがinherentメソッドを持っていない ([C-SMART-PTR])
-  - <input type="checkbox"/> 変換メソッドは最も関係の深い型に付ける ([C-CONV-SPECIFIC])
-  - <input type="checkbox"/> 明確なレシーバを持つ関数はメソッドにする ([C-METHOD])
+  - <input type="checkbox"/> 変換メソッドが最も関係の深い型に付いている ([C-CONV-SPECIFIC])
+  - <input type="checkbox"/> 明確なレシーバを持つ関数がメソッドになっている ([C-METHOD])
   - <input type="checkbox"/> 関数がoutパラメータを持たない ([C-NO-OUT])
   - <input type="checkbox"/> 奇妙な演算子オーバーロードを行っていない ([C-OVERLOAD])
   - <input type="checkbox"/> `Deref`と`DerefMut`を実装しているのはスマートポインタだけである ([C-DEREF])
@@ -54,9 +54,9 @@
   - <input type="checkbox"/> トレイトオブジェクトとして有用なトレイトはオブジェクトセーフになっている ([C-OBJECT])
 - **型安全性** *(クレートが型システムを有効に活用している)*
   - <input type="checkbox"/> newtypeを使って静的に値を区別する ([C-NEWTYPE])
-  - <input type="checkbox"/> `bool`や`Option`の代わりに意味のある型を使う ([C-CUSTOM-TYPE])
-  - <input type="checkbox"/> フラグの集合は、列挙型ではなく`bitflags`で表す ([C-BITFLAG])
-  - <input type="checkbox"/> 複雑な値の生成にはビルダーパターンを使う ([C-BUILDER])
+  - <input type="checkbox"/> `bool`や`Option`の代わりに意味のある型を使っている ([C-CUSTOM-TYPE])
+  - <input type="checkbox"/> フラグの集合を列挙型ではなく`bitflags`で表している ([C-BITFLAG])
+  - <input type="checkbox"/> 複雑な値の生成にビルダーパターンを使っている ([C-BUILDER])
 - **信頼性** *(クレートが間違ったことをしない)*
   - <input type="checkbox"/> 関数が引数を検証している ([C-VALIDATE])
   - <input type="checkbox"/> デストラクタが失敗しない ([C-DTOR-FAIL])
